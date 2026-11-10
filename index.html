@@ -1,0 +1,1614 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>땡! 파이브</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --ink:#14161A; --dim:#667085; --line:#E1E4EA;
+  --primary:#14161A; --primary-ink:#FFFFFF;
+  --accent:#FFB400; --accent-edge:#D98F00; --halo:rgba(255,180,0,.16);
+  --card:#FFFFFF; --card-ink:#14161A;
+  --cyc:5.6s;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1114;--surface:#1A1D23;--ink:#F3F4F6;--dim:#9AA1AD;--line:#2B2F38;
+    --primary:#F3F4F6;--primary-ink:#14161A;
+    --accent:#FFC83D;--accent-edge:#E6A600;--halo:rgba(255,200,61,.14);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1114;--surface:#1A1D23;--ink:#F3F4F6;--dim:#9AA1AD;--line:#2B2F38;
+  --primary:#F3F4F6;--primary-ink:#14161A;
+  --accent:#FFC83D;--accent-edge:#E6A600;--halo:rgba(255,200,61,.14);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  -webkit-user-select:none;user-select:none;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2.5px solid var(--ink);outline-offset:3px}
+#app{height:100%;max-width:480px;margin:0 auto;position:relative}
+
+/* 메인 화면 */
+#home{position:absolute;z-index:1;inset:0;display:flex;flex-direction:column;padding:16px 24px 18px;overflow:auto}
+.hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;min-height:0;text-align:center;position:relative}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+.eq{display:flex;align-items:center;gap:12px;font-size:30px;font-weight:700;color:var(--ink)}
+.eq .op{display:inline-block}
+.eq .p2{font-size:30px}
+.bellwrap{position:relative;width:116px;height:116px;display:grid;place-items:center}
+.halo{position:absolute;inset:0;border-radius:50%;background:var(--halo)}
+.hb{position:relative;width:70px;height:auto;transform-origin:50% 14%}
+.hb .b1{fill:var(--accent)}
+.hb .b2{fill:var(--accent-edge)}
+.wave{position:absolute;inset:6px;border-radius:50%;border:2px solid var(--accent);opacity:0}
+.ding{position:absolute;right:-30px;top:2px;font-size:22px;font-weight:700;color:var(--ink);opacity:0}
+h1{margin:0;font-size:46px;font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.tag{margin:8px 0 0;font-size:16px;line-height:1.55;color:var(--dim)}
+.menu{display:grid;gap:10px;flex:none;padding-top:10px}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;font-weight:500}
+.btn svg{width:20px;height:20px;flex:none}
+.btn:active{filter:brightness(.95)}
+.btn.main{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);font-weight:700}
+.btn.sub{background:var(--surface)}
+.btn.quiet{background:var(--surface);color:var(--dim);min-height:48px;font-size:16px}
+.step{margin:4px 0 0;text-align:center;font-size:12.5px;color:var(--dim)}
+.toast{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* 꾸밈: 제목 강조, 떠다니는 과일, 벨 소리 파동 */
+.snow{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.flake{position:absolute;left:0;top:0;width:var(--s);height:var(--s);opacity:var(--o);will-change:transform}
+.flake svg{display:block;width:100%;height:100%}
+.burst{position:absolute;left:50%;top:50%;width:0;height:0}
+.burst i{position:absolute;left:-1.5px;top:-5px;width:3px;height:10px;border-radius:2px;background:var(--accent-edge);opacity:0;animation:spark var(--cyc) ease-out infinite}
+@keyframes spark{0%,36%{opacity:0;transform:rotate(var(--r)) translateY(-44px)}39%{opacity:1}54%,100%{opacity:0;transform:rotate(var(--r)) translateY(-66px)}}
+
+/* 예시 카드 */
+.slot{--w:58px;width:var(--w);height:calc(var(--w)*1.4);position:relative;flex:none}
+.card{position:absolute;inset:0;background:var(--card);color:var(--card-ink);border:1px solid var(--line);border-radius:10px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);place-items:center;padding:9% 7%}
+.pip{width:calc(var(--w)*.3);height:calc(var(--w)*.3)}
+
+/* 반복 애니메이션: 카드 두 장 → 합이 5 → 벨 울림 */
+.s1{animation:c1 var(--cyc) ease-out infinite}
+.s2{animation:c2 var(--cyc) ease-out infinite}
+.p1{animation:o1 var(--cyc) linear infinite}
+.p2{animation:o2 var(--cyc) ease-out infinite}
+.hb{animation:swing var(--cyc) ease-out infinite}
+.wave{animation:wave var(--cyc) ease-out infinite}
+.wave.w2{animation-delay:.22s}
+.ding{animation:ding var(--cyc) ease-out infinite}
+@keyframes c1{0%,3%{opacity:0;transform:translateY(-16px) rotate(-5deg)}9%,88%{opacity:1;transform:none}95%,100%{opacity:0;transform:none}}
+@keyframes c2{0%,15%{opacity:0;transform:translateY(-16px) rotate(5deg)}21%,88%{opacity:1;transform:none}95%,100%{opacity:0;transform:none}}
+@keyframes o1{0%,10%{opacity:0}14%,88%{opacity:1}95%,100%{opacity:0}}
+@keyframes o2{0%,28%{opacity:0;transform:scale(.85)}33%,88%{opacity:1;transform:none}95%,100%{opacity:0;transform:none}}
+@keyframes swing{0%,36%{transform:rotate(0)}40%{transform:rotate(-24deg)}45%{transform:rotate(18deg)}50%{transform:rotate(-10deg)}55%,100%{transform:rotate(0)}}
+@keyframes wave{0%,36%{transform:scale(.6);opacity:0}39%{opacity:.55}58%,100%{transform:scale(1.75);opacity:0}}
+@keyframes ding{0%,36%{opacity:0;transform:translateY(6px) scale(.8)}42%,86%{opacity:1;transform:none}94%,100%{opacity:0;transform:none}}
+
+/* ? 버튼 */
+.help{position:absolute;top:16px;right:24px;z-index:2;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:18px;font-weight:700;line-height:1}
+.help:active{filter:brightness(.95)}
+
+/* 규칙 보기 화면 */
+.rscreen{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;padding:12px 22px 18px;background:var(--bg)}
+.rscreen[hidden]{display:none}
+.p2p{margin-top:22px;padding-top:4px;border-top:1px solid var(--line)}
+.p2p .or{margin:14px 0 10px}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btnrow .btn{font-size:15px;min-height:50px;padding:0 6px}
+textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:12.5px;line-height:1.4;background:var(--surface);color:var(--ink);font-family:ui-monospace,Menlo,Consolas,monospace;resize:none;-webkit-user-select:text;user-select:text;word-break:break-all;margin:8px 0}
+#p2pJoinPanel,#p2pInvBox{display:block}
+#p2pJoinPanel[hidden],#p2pInvBox[hidden],#p2pAnsBox[hidden],#p2pInvite[hidden]{display:none}
+#p2pJoinPanel .btn,#p2pInvBox .btn,#p2pAnsBox .btn,#p2pInvite>.btn{margin-top:4px;min-height:48px;font-size:16px}
+#p2pInvite{margin:6px 0 14px}
+.code.small{font-size:30px;letter-spacing:0;padding-left:0}
+.opp.empty{visibility:hidden}
+.fillrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;cursor:pointer}
+.fillrow .txt b{display:block;font-size:16px;font-weight:700}
+.fillrow .txt small{display:block;margin-top:3px;font-size:13px;line-height:1.45;color:var(--dim)}
+.sw:disabled{opacity:.5;cursor:default}
+.kbhint{display:none;margin:0;text-align:center;font-size:12.5px;color:var(--dim);padding-bottom:4px}
+.kbhint b{display:inline-block;min-width:20px;padding:1px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-weight:700}
+@media (hover:hover) and (pointer:fine){ .kbhint{display:block} }
+.rbar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;height:44px;flex:none}
+.back{width:40px;height:40px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:18px;line-height:1}
+.rbar h2{margin:0;text-align:center;font-size:18px;font-weight:700}
+.rbody{flex:1;min-height:0;overflow:auto;padding:16px 2px 14px;word-break:keep-all;overflow-wrap:break-word}
+.lead{margin:0 0 18px;font-size:21px;font-weight:700;line-height:1.4;letter-spacing:-.02em}
+.ex{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.exi{margin:0;padding:14px 8px 12px;border-radius:16px;background:var(--surface);border:1.5px dashed var(--line);display:grid;gap:10px;justify-items:center}
+.exi.ok{border:1.5px solid var(--ink)}
+.exrow{display:flex;align-items:center;gap:6px;font-size:18px;font-weight:700;color:var(--dim);white-space:nowrap}
+.exrow .slot{--w:40px}
+.exrow .res{color:var(--ink)}
+.exi figcaption{font-size:13px;line-height:1.45;text-align:center;color:var(--dim)}
+.exi figcaption b{display:block;font-size:16px;color:var(--ink);margin-bottom:2px}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:20px;counter-reset:s}
+.steps li{position:relative;padding-left:42px;counter-increment:s}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-size:14px;font-weight:700}
+.steps h3{margin:3px 0 4px;font-size:16px;font-weight:700}
+.steps p{margin:0;font-size:14.5px;line-height:1.65;color:var(--dim)}
+#app.rules-open .snow{visibility:hidden}
+
+/* 싱글 플레이 화면 뼈대 */
+.gscreen{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;gap:8px;padding:12px 18px 14px;background:var(--bg)}
+.gscreen[hidden]{display:none}
+.gbar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;height:44px;flex:none}
+.goal{text-align:center;font-size:14px;color:var(--dim)}
+.cross{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"tl n tr" "w c e" "bl s br";gap:6px 8px;flex:none;align-items:center;justify-items:center;margin:auto 0}
+.pn{grid-area:n}.pw{grid-area:w}.pe{grid-area:e}.ps{grid-area:s}.hub{grid-area:c}
+#tc0{grid-area:tl;justify-self:end;align-self:end}
+#tc1{grid-area:tr;justify-self:start;align-self:end}
+#tc2{grid-area:bl;justify-self:end;align-self:start}
+#tc3{grid-area:br;justify-self:start;align-self:start}
+.opp{display:flex;flex-direction:column;align-items:center;gap:5px;position:relative}
+.nm{display:flex;flex-wrap:wrap;justify-content:center;gap:0 6px;max-width:84px;text-align:center;line-height:1.3}
+.who{font-size:14px;font-weight:500;color:var(--dim)}
+.cnt{font-size:14px;color:var(--dim);font-variant-numeric:tabular-nums}
+.cross .slot{--w:clamp(70px,22vw,96px)}
+.slot.turn{outline:2.5px solid var(--accent);outline-offset:3px}
+.card.new{animation:drop .16s ease-out}
+@keyframes drop{from{transform:translateY(-10px);opacity:0}to{transform:none;opacity:1}}
+.ear{position:absolute;right:-9px;bottom:-9px;width:24px;height:24px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--dim);display:grid;place-items:center}
+.ear svg{width:15px;height:15px}
+.ear.on{background:var(--accent);border-color:var(--accent);color:#14161A}
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 7px;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.chip svg{width:19px;height:19px}
+.chip.hot{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.hub{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;width:100%}
+.tbell{position:relative;width:clamp(76px,25vw,104px);aspect-ratio:1;display:grid;place-items:center}
+.tbell .hl2{position:absolute;inset:0;border-radius:50%;background:var(--halo)}
+.tbell .gb{position:relative;width:58%;height:auto;transform-origin:50% 14%}
+.gb .b1{fill:var(--accent)}
+.gb .b2{fill:var(--accent-edge)}
+.tbell .wv{position:absolute;inset:4px;border-radius:50%;border:2px solid var(--accent);opacity:0}
+.tbell.ring .gb{animation:gswing .55s ease-out}
+.tbell.ring .wv{animation:gwave .65s ease-out}
+.tbell.ring .wv2{animation-delay:.14s}
+@keyframes gswing{0%{transform:rotate(0)}20%{transform:rotate(-26deg)}45%{transform:rotate(20deg)}70%{transform:rotate(-10deg)}100%{transform:rotate(0)}}
+@keyframes gwave{from{transform:scale(.7);opacity:.55}to{transform:scale(1.7);opacity:0}}
+.status{margin:0;min-height:38px;font-size:13.5px;line-height:1.35;font-weight:500;text-align:center;color:var(--dim);word-break:keep-all}
+.btns{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:10px;padding-bottom:6px}
+.btns button{min-height:88px;border-radius:16px;font-size:19px;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;touch-action:none;line-height:1.1}
+.flip{border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
+.flip:active:not(:disabled){background:var(--ink);color:var(--bg)}
+.flip:disabled{border-color:var(--line);color:var(--dim)}
+.ready{border:1.5px dashed var(--dim);background:var(--surface);color:var(--ink)}
+.ready svg{width:28px;height:28px}
+.ready small{font-size:12px;font-weight:500;color:var(--dim)}
+.ready.on{background:var(--primary);border:1.5px solid var(--primary);color:var(--primary-ink)}
+.ready.on small{color:inherit;opacity:.8}
+.gbell{border:0;background:var(--accent);color:#14161A;transition:transform .08s}
+.gbell svg{width:34px;height:34px}
+.gbell.hit,.gbell:active{transform:scale(.96);filter:brightness(.94)}
+#app.game-open .snow{visibility:hidden}
+@media (max-height:720px){
+  .cross .slot{--w:clamp(60px,19vw,80px)}
+  .btns button{min-height:76px;font-size:17px}
+  .ready small{display:none}
+  .tbell{width:clamp(66px,20vw,84px)}
+}
+
+/* 싱글 플레이: 규칙 연결용 */
+.opp.out{opacity:.4}
+.slot.rang{animation:rang .5s ease-out}
+@keyframes rang{0%{transform:scale(1)}30%{transform:scale(1.08)}100%{transform:scale(1)}}
+.tbell.bad .wv{border-color:#D92D3A}
+.status.good{color:#0E8F4A}
+.status.bad{color:#D92D3A}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .status.good{color:#4ADE80}
+  :root:not([data-theme="light"]) .status.bad,:root:not([data-theme="light"]) .tbell.bad .wv{color:#FF7A85}
+  :root:not([data-theme="light"]) .status.bad{color:#FF7A85}
+}
+:root[data-theme="dark"] .status.good{color:#4ADE80}
+:root[data-theme="dark"] .status.bad{color:#FF7A85}
+#cross.noear .ear{display:none}
+.ready:disabled{opacity:.4}
+.ready.nudge{animation:nudge .4s}
+.ready.wait{border-color:var(--accent);border-style:solid;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,180,0,0)}50%{box-shadow:0 0 0 6px rgba(255,180,0,.4)}}
+@keyframes nudge{0%,100%{transform:none}25%{transform:translateY(-4px)}60%{transform:translateY(2px)}}
+.gres{position:absolute;inset:0;z-index:5;background:rgba(15,17,20,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.gres[hidden]{display:none}
+.gpanel{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:24px 20px;width:100%;max-width:360px;display:grid;gap:12px;word-break:keep-all}
+.gpanel h2{margin:0;font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.gsub{margin:0;font-size:16px;color:var(--dim)}
+.gpanel ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:16px}
+.gpanel li{display:flex;justify-content:space-between;padding:9px 12px;border-radius:10px;background:var(--bg);font-variant-numeric:tabular-nums}
+.gpanel li.me{background:var(--primary);color:var(--primary-ink);font-weight:700}
+.gst{margin:0;font-size:14px;line-height:1.7;color:var(--dim)}
+.grow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (prefers-reduced-motion:reduce){ .slot.rang,.ready.nudge,.ready.wait,.tbell.ring .gb,.tbell.ring .wv{animation:none} }
+
+/* 설정 화면 */
+.grp{margin-bottom:22px}
+.grp h3{margin:0 0 10px;font-size:15px;font-weight:700}
+.lvseg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.lvseg button{border:0;background:transparent;padding:12px 0;border-radius:9px;font-size:16px;font-weight:500;color:var(--dim)}
+.lvseg button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);font-weight:700}
+.hint{margin:8px 2px 0;font-size:13.5px;line-height:1.5;color:var(--dim)}
+.opts{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.opts label{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;cursor:pointer}
+.opts .txt b{display:block;font-size:16px;font-weight:700}
+.opts .txt small{display:block;margin-top:3px;font-size:13px;line-height:1.45;color:var(--dim)}
+.sw{appearance:none;-webkit-appearance:none;flex:none;width:50px;height:30px;margin:0;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.sw:checked{background:var(--primary)}
+.sw:checked::after{transform:translateX(20px);background:var(--primary-ink)}
+.nohelp .corner{visibility:hidden}
+#app.settings-open .snow{visibility:hidden}
+@media (prefers-reduced-motion:reduce){ .sw,.sw::after{transition:none} }
+
+/* 멀티 플레이 방 */
+input{font:inherit;-webkit-user-select:text;user-select:text}
+.note{margin:0;font-size:13.5px;line-height:1.55;color:var(--dim);word-break:keep-all}
+.err{color:#D92D3A;min-height:20px}
+.fld{display:grid;gap:6px;font-size:15px;font-weight:500;margin-bottom:12px}
+#codeIn{text-transform:uppercase;letter-spacing:.1em}
+#codeIn::placeholder{text-transform:none;letter-spacing:0}
+.fld input,.join input{border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:18px;background:var(--surface);color:var(--ink);width:100%}
+.or{margin:18px 0 10px;font-size:14px;color:var(--dim)}
+.join{display:grid;grid-template-columns:1fr auto;gap:8px}
+.join .btn{width:auto;padding:0 24px;min-height:52px}
+.btn:disabled{opacity:.45}
+#mPick .note{margin-top:12px}
+.code{margin:8px 0 18px;font-size:54px;font-weight:700;letter-spacing:.16em;color:var(--ink);padding-left:.16em}
+.seats{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:8px}
+.seats li{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px}
+.seats li.ai{color:var(--dim)}
+.seats .tag{margin:0;font-size:12px;line-height:1.5;font-weight:700;background:var(--accent);color:#14161A;border-radius:999px;padding:2px 10px}
+#app.multi-open .snow{visibility:hidden}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .err{color:#FF7A85} }
+:root[data-theme="dark"] .err{color:#FF7A85}
+
+@media (max-height:640px){
+  .eq{display:none}
+  h1{font-size:38px}
+  .bellwrap{width:96px;height:96px}
+  .hb{width:58px}
+  .cross .slot{--w:clamp(52px,16vw,64px)}
+  .btns button{min-height:66px}
+  .tbell{width:clamp(58px,17vw,70px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .s1,.s2,.p1,.p2,.hb,.wave,.ding,.toast{animation:none;transition:none}
+  .burst{display:none}
+  .snow{display:none}
+  .ding{opacity:1}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="fr0" viewBox="0 0 24 24"><path fill="#E5484D" d="M12 7.500c2-1.600 7-1.200 7.600 4 .5 4.700-2.700 9.500-5.800 9.500-1 0-1.200-.5-1.800-.5s-.8.5-1.800.5C7.100 21 3.900 16.200 4.400 11.500 5 6.300 10 5.900 12 7.500z"/><path fill="#2F9E5B" d="M12.500 6.500c-.2-2 1-3.500 3.200-3.800.2 2-.9 3.600-3.200 3.800z"/></symbol>
+    <symbol id="fr1" viewBox="0 0 24 24"><circle cx="12" cy="13.200" r="8" fill="#F59E0B"/><path fill="#2F9E5B" d="M12 5.600c.3-1.800 1.600-2.800 3.500-2.900-.1 1.900-1.400 3-3.500 2.900z"/></symbol>
+    <symbol id="fr2" viewBox="0 0 24 24"><g fill="#7B5CE0"><circle cx="8.200" cy="10.800" r="3.100"/><circle cx="12" cy="10.800" r="3.100"/><circle cx="15.800" cy="10.800" r="3.100"/><circle cx="10.100" cy="14.600" r="3.100"/><circle cx="13.900" cy="14.600" r="3.100"/><circle cx="12" cy="18.400" r="3.100"/></g><path fill="#2F9E5B" d="M12 7.600c0-2 1.300-3.300 3.600-3.300 0 2-1.300 3.300-3.600 3.300z"/></symbol>
+    <symbol id="fr3" viewBox="0 0 24 24"><path fill="#D6336C" d="M12 21.200C7.300 18.400 4.800 14.400 5.100 10.600c.2-2.200 2.100-3.300 4.100-3 1 .15 1.900.5 2.800.5s1.800-.35 2.800-.5c2-.3 3.900.8 4.100 3-.3 3.800-2.800 7.800-6.900 10.600z"/><path fill="#2F9E5B" d="M7.800 7.600 12 4.200l4.200 3.400-4.200 1z"/><g fill="#fff" opacity=".9"><circle cx="9.500" cy="12" r=".8"/><circle cx="14.500" cy="12" r=".8"/><circle cx="12" cy="16" r=".8"/></g></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+  <div class="snow" id="snow" aria-hidden="true"></div>
+  <main id="home">
+    <button type="button" class="help" id="help" aria-label="규칙 보기">?</button>
+    <section class="hero">
+      <div class="stage" aria-hidden="true">
+        <div class="eq" id="eq"></div>
+        <div class="bellwrap">
+          <i class="halo"></i>
+          <i class="wave"></i><i class="wave w2"></i>
+          <svg class="hb" viewBox="0 0 64 64"><path class="b1" d="M32 5c-2 0-3.200 1.300-3.200 3v1.800C21 11.700 16 18.500 16 27v11l-6 8v3h44v-3l-6-8V27c0-8.500-5-15.300-12.800-17.200V8c0-1.700-1.200-3-3.200-3z"/><path class="b2" d="M25.500 52a6.500 6.500 0 0 0 13 0z"/></svg>
+          <span class="burst" aria-hidden="true"><i style="--r:30deg"></i><i style="--r:90deg"></i><i style="--r:150deg"></i><i style="--r:210deg"></i><i style="--r:270deg"></i><i style="--r:330deg"></i></span>
+          <b class="ding">땡!</b>
+        </div>
+      </div>
+      <div>
+        <h1>땡! 파이브</h1>
+        <p class="tag">같은 과일이 딱 5개가 되는 순간,<br>벨을 누르세요.</p>
+      </div>
+    </section>
+
+    <nav class="menu" aria-label="메뉴">
+      <button type="button" class="btn main" data-name="싱글 플레이">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.500"/><path d="M5 20c.8-3.600 3.700-5.500 7-5.500s6.200 1.900 7 5.500"/></svg>
+        싱글 플레이
+      </button>
+      <button type="button" class="btn sub" data-name="멀티 플레이">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8.500" r="3"/><path d="M3 19.500c.6-3 3-4.800 6-4.800s5.400 1.800 6 4.800"/><circle cx="17" cy="9" r="2.500"/><path d="M16.500 14.200c2.600-.2 4.700 1.400 5.500 4.300"/></svg>
+        멀티 플레이
+      </button>
+      <button type="button" class="btn quiet" data-name="설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>
+        설정
+      </button>
+      <p class="step">7단계 · 온라인 대전 · 빌드 1107-i</p>
+    </nav>
+  </main>
+  <section id="rules" class="rscreen" hidden aria-labelledby="rt">
+    <header class="rbar">
+      <button type="button" class="back" id="rback" aria-label="돌아가기">←</button>
+      <h2 id="rt">게임 규칙</h2>
+      <span></span>
+    </header>
+    <div class="rbody">
+      <p class="lead">같은 과일이 딱 5개가 되는 순간,<br>가장 먼저 벨을 누르세요.</p>
+      <div class="ex">
+        <figure class="exi ok">
+          <div class="exrow" id="exOk"></div>
+          <figcaption><b>땡!</b>사과 2 + 사과 3 = 5</figcaption>
+        </figure>
+        <figure class="exi no">
+          <div class="exrow" id="exNo"></div>
+          <figcaption><b>벨 금지</b>사과와 귤은 따로 세요</figcaption>
+        </figure>
+      </div>
+      <ol class="steps">
+        <li><h3>카드 내기</h3><p>시계방향으로 돌아가며, 내 차례에 “카드 내기”를 눌러 한 장씩 내요. 8초 안에 내지 않으면 자동으로 나가요.</p></li>
+        <li><h3>벨 누르기</h3><p>테이블에 보이는 카드들 중 같은 과일이 모두 합쳐 5개가 되면 벨을 눌러요. 가장 먼저 누른 사람이 보이는 카드를 전부 가져가요.</p></li>
+        <li><h3>헛벨</h3><p>5개가 아닌데 벨을 누르면, 다른 사람에게 카드를 한 장씩 줘요.</p></li>
+        <li><h3>귀 잡기</h3><p>“귀 잡기” 버튼을 누르고 있다가, 5개가 되면 귀를 놓으면서 벨을 쳐요. 귀를 잡은 채로는 벨을 칠 수 없어요. 5개가 아닐 때 귀를 놓거나 귀 없이 벨을 누르면, 처음 한 번은 경고이고 그다음부터는 카드를 한 장씩 줘요.</p></li>
+        <li><h3>컴퓨터 키보드로 하기</h3><p>마우스는 한 번에 하나만 누를 수 있어서, 키보드로 하면 귀를 잡은 채 다른 버튼을 누를 수 있어요. 귀 잡기는 <b>A</b>(또는 Shift)를 누르고 있고, 카드 내기는 <b>S</b>(또는 Space)예요. 벨은 A를 떼면서 <b>D</b>(또는 Enter)를 눌러요.</p></li>
+        <li><h3>승리와 탈락</h3><p>카드를 29장 먼저 모으면 이겨요. 카드를 모두 잃으면 탈락해요. 사람이 적게 모인 방에서는 목표가 늘어나고, 둘이서 할 때는 상대 카드를 모두 가져와야 해요.</p></li>
+      </ol>
+    </div>
+    <button type="button" class="btn main" id="rclose">알겠어요</button>
+  </section>
+  <section id="multi" class="rscreen" hidden aria-labelledby="mt">
+    <header class="rbar">
+      <button type="button" class="back" id="mback" aria-label="돌아가기">←</button>
+      <h2 id="mt">멀티 플레이</h2>
+      <span></span>
+    </header>
+    <div class="rbody">
+      <div id="mPick">
+        <p class="lead">친구와 같은 방에 들어가<br>함께 해요.</p>
+        <label class="fld">내 이름<input id="nick" maxlength="8" placeholder="예: 민혁" autocomplete="off"></label>
+        <button type="button" class="btn main" id="mkRoom" disabled>방 만들기</button>
+        <div class="or">또는 방 코드로 입장</div>
+        <div class="join">
+          <input id="codeIn" maxlength="4" placeholder="코드 4자리" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="방 코드">
+          <button type="button" class="btn" id="joinRoom" disabled>입장</button>
+        </div>
+        <p class="note err" id="mErr" aria-live="polite"></p>
+        <p class="note" id="mNote">온라인 연결 확인 중…</p>
+        <p class="note" id="mDiag"></p>
+        <div class="p2p">
+          <div class="or">로그인 없이 직접 연결 (연결 코드 주고받기)</div>
+          <div class="btnrow">
+            <button type="button" class="btn" id="p2pHost">코드로 방 만들기</button>
+            <button type="button" class="btn" id="p2pJoin">코드로 입장</button>
+          </div>
+          <div id="p2pJoinPanel" hidden>
+            <p class="note">방장이 보낸 연결 코드를 붙여 넣으세요.</p>
+            <textarea id="p2pOfferIn" rows="3" placeholder="방장의 연결 코드" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+            <button type="button" class="btn main" id="p2pMakeAns">응답 코드 만들기</button>
+            <div id="p2pAnsBox" hidden>
+              <p class="note">아래 응답 코드를 방장에게 보내세요. 방장이 붙여 넣으면 자동으로 입장돼요.</p>
+              <textarea id="p2pAnsOut" rows="3" readonly></textarea>
+              <button type="button" class="btn" id="p2pAnsCopy">복사</button>
+            </div>
+          </div>
+          <p class="note err" id="p2pErr"></p>
+        </div>
+      </div>
+      <div id="mRoom" hidden>
+        <p class="note" id="codeNote">방 코드를 친구에게 알려 주세요</p>
+        <div class="code" id="codeShow"></div>
+        <ul class="seats" id="seatList"></ul>
+        <label class="fillrow"><span class="txt"><b>빈 자리를 AI로 채우기</b><small>끄면 모인 사람끼리만 해요. 둘이서도 1대1로 할 수 있어요.</small></span><input type="checkbox" class="sw" id="optFill" checked></label>
+        <label class="fillrow"><span class="txt"><b>같은 시각 기준으로 판정</b><small>한 사람이 폰 두 대로 시험할 때 켜세요. 친구 화면에 5개가 늦게 뜨는 시간(통신 지연)을 더해서 비교해요.</small></span><input type="checkbox" class="sw" id="optSync"></label>
+        <p class="note" id="lobNote"></p>
+        <p class="note" id="mDiag2"></p>
+        <div id="p2pInvite" hidden>
+          <button type="button" class="btn" id="p2pNew">친구 초대 코드 만들기</button>
+          <div id="p2pInvBox" hidden>
+            <p class="note">1) 이 코드를 친구에게 보내세요</p>
+            <textarea id="p2pOfferOut" rows="3" readonly></textarea>
+            <button type="button" class="btn" id="p2pOfferCopy">복사</button>
+            <p class="note">2) 친구가 보낸 응답 코드를 붙여 넣고 연결을 누르세요</p>
+            <textarea id="p2pAnsIn" rows="3" placeholder="친구의 응답 코드" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+            <button type="button" class="btn main" id="p2pConnect">연결</button>
+          </div>
+          <p class="note err" id="p2pInvErr"></p>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn main" id="mstart" hidden>게임 시작</button>
+  </section>
+  <section id="settings" class="rscreen" hidden aria-labelledby="stt">
+    <header class="rbar">
+      <button type="button" class="back" id="sback" aria-label="돌아가기">←</button>
+      <h2 id="stt">설정</h2>
+      <span></span>
+    </header>
+    <div class="rbody">
+      <div class="grp">
+        <h3>난이도</h3>
+        <div class="lvseg" id="lvSeg" role="group" aria-label="난이도">
+          <button type="button" data-lv="easy" aria-pressed="false">쉬움</button>
+          <button type="button" data-lv="normal" aria-pressed="true">보통</button>
+          <button type="button" data-lv="hard" aria-pressed="false">어려움</button>
+        </div>
+        <p class="hint" id="lvHint"></p>
+      </div>
+      <ul class="opts">
+        <li><label><span class="txt"><b>귀 잡기 규칙</b><small>귀 잡기를 누른 채 카드를 내고, 벨은 귀를 놓으면서 쳐요. 끄면 귀 없이도 할 수 있어요.</small></span><input type="checkbox" class="sw" id="optEar"></label></li>
+        <li><label><span class="txt"><b>과일 합계 보이기</b><small>화면 모서리에 과일별 합계를 보여줘요. 끄면 직접 세어야 해요.</small></span><input type="checkbox" class="sw" id="optHelper"></label></li>
+        <li><label><span class="txt"><b>소리</b><small>벨, 헛벨, 카드 넘기는 소리</small></span><input type="checkbox" class="sw" id="optSound"></label></li>
+        <li><label><span class="txt"><b>진동</b><small>벨을 치거나 벌칙을 받을 때 진동해요. 지원하는 기기에서만 동작해요.</small></span><input type="checkbox" class="sw" id="optVib"></label></li>
+      </ul>
+    </div>
+    <button type="button" class="btn main" id="sclose">완료</button>
+  </section>
+  <section id="game" class="gscreen" hidden aria-label="싱글 플레이">
+    <header class="gbar">
+      <button type="button" class="back" id="gback" aria-label="나가기">←</button>
+      <div class="goal" id="goalTxt">먼저 29장 모으기</div>
+      <span></span>
+    </header>
+    <div class="cross" id="cross">
+      <div class="corner" id="tc0"></div>
+      <div class="opp pn" id="opp2"><div class="nm"><span class="who" id="who2">감자</span><span class="cnt" id="cnt2">14장</span></div><div class="slot" id="slot2"></div><span class="ear on" id="ear2"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.500 10a5.500 5.500 0 1 1 11 0c0 3-2.500 4-3 6.500-.4 2-2 3.500-4 3.500-1.800 0-3-1.200-3-2.800"/><path d="M10.500 9.500a2 2 0 0 1 3.800-.8c.5 1.600-1.500 2.200-1.800 3.800"/></svg></span></div>
+      <div class="corner" id="tc1"></div>
+      <div class="opp pw" id="opp1"><div class="nm"><span class="who" id="who1">보리</span><span class="cnt" id="cnt1">14장</span></div><div class="slot" id="slot1"></div><span class="ear on" id="ear1"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.500 10a5.500 5.500 0 1 1 11 0c0 3-2.500 4-3 6.500-.4 2-2 3.500-4 3.500-1.800 0-3-1.200-3-2.800"/><path d="M10.500 9.500a2 2 0 0 1 3.800-.8c.5 1.600-1.500 2.200-1.800 3.800"/></svg></span></div>
+      <div class="hub">
+        <div class="tbell" id="tbell" aria-hidden="true"><i class="hl2"></i><i class="wv"></i><i class="wv wv2"></i><svg class="gb" viewBox="0 0 64 64" aria-hidden="true"><path class="b1" d="M32 5c-2 0-3.200 1.300-3.200 3v1.800C21 11.700 16 18.500 16 27v11l-6 8v3h44v-3l-6-8V27c0-8.500-5-15.300-12.800-17.200V8c0-1.700-1.200-3-3.200-3z"/><path class="b2" d="M25.500 52a6.500 6.500 0 0 0 13 0z"/></svg></div>
+        <p class="status" id="gstatus" aria-live="polite"></p>
+      </div>
+      <div class="opp pe" id="opp3"><div class="nm"><span class="who" id="who3">호두</span><span class="cnt" id="cnt3">14장</span></div><div class="slot" id="slot3"></div><span class="ear on" id="ear3"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.500 10a5.500 5.500 0 1 1 11 0c0 3-2.500 4-3 6.500-.4 2-2 3.500-4 3.500-1.800 0-3-1.200-3-2.800"/><path d="M10.500 9.500a2 2 0 0 1 3.800-.8c.5 1.600-1.500 2.200-1.800 3.800"/></svg></span></div>
+      <div class="corner" id="tc2"></div>
+      <div class="opp ps" id="opp0"><div class="nm"><span class="who">나</span><span class="cnt" id="cnt0">14장</span></div><div class="slot" id="slot0"></div><span class="ear" id="ear0"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.500 10a5.500 5.500 0 1 1 11 0c0 3-2.500 4-3 6.500-.4 2-2 3.500-4 3.500-1.800 0-3-1.200-3-2.800"/><path d="M10.500 9.500a2 2 0 0 1 3.800-.8c.5 1.600-1.500 2.200-1.800 3.800"/></svg></span></div>
+      <div class="corner" id="tc3"></div>
+    </div>
+    <div class="btns">
+      <button type="button" class="flip" id="flip">카드 내기</button>
+      <button type="button" class="ready" id="ready" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.500 10a5.500 5.500 0 1 1 11 0c0 3-2.500 4-3 6.500-.4 2-2 3.500-4 3.500-1.800 0-3-1.200-3-2.800"/><path d="M10.500 9.500a2 2 0 0 1 3.800-.8c.5 1.600-1.500 2.200-1.800 3.800"/></svg><span>귀 잡기</span><small>누르고 있기</small></button>
+      <button type="button" class="gbell" id="gbell" aria-label="벨 누르기"><svg viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M32 5c-2 0-3.200 1.300-3.200 3v1.800C21 11.700 16 18.500 16 27v11l-6 8v3h44v-3l-6-8V27c0-8.500-5-15.300-12.800-17.200V8c0-1.700-1.200-3-3.200-3z"/><path fill="currentColor" d="M25.500 52a6.500 6.500 0 0 0 13 0z"/></svg><span>땡!</span></button>
+    </div>
+    <p class="kbhint" id="kbhint">키보드: 귀 잡기 <b>A</b>(누르고 있기) · 카드 내기 <b>S</b> · 땡! <b>D</b>(A를 떼면서)</p>
+    <div class="gres" id="gres" hidden role="dialog" aria-modal="true" aria-labelledby="grt">
+      <div class="gpanel">
+        <h2 id="grt"></h2>
+        <p class="gsub" id="grs"></p>
+        <ul id="grl"></ul>
+        <p class="gst" id="grst"></p>
+        <p class="gst" id="grwait" hidden>방장이 다시 시작하면 이어서 해요</p>
+        <div class="grow">
+          <button type="button" class="btn main" id="gagain">다시 하기</button>
+          <button type="button" class="btn" id="ghome">처음으로</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(s){return document.querySelector(s)};
+  var PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9]};
+  function fruitSvg(f){
+    var NS='http://www.w3.org/2000/svg', v=document.createElementNS(NS,'svg'), u=document.createElementNS(NS,'use');
+    v.setAttribute('viewBox','0 0 24 24'); v.setAttribute('aria-hidden','true');
+    u.setAttribute('href','#fr'+f); v.appendChild(u); return v;
+  }
+  function cardEl(f,n){
+    var d=document.createElement('div'); d.className='card';
+    PIPS[n].forEach(function(k){
+      var s=fruitSvg(f); s.setAttribute('class','pip');
+      s.style.gridRow=String(Math.floor((k-1)/3)+1); s.style.gridColumn=String(((k-1)%3)+1);
+      d.appendChild(s);
+    });
+    return d;
+  }
+
+  // 예시: 사과 2 + 사과 3 = 5
+  var eq=$('#eq');
+  function slot(cls,n){ var s=document.createElement('div'); s.className='slot '+cls; s.appendChild(cardEl(0,n)); return s; }
+  function op(cls,t){ var s=document.createElement('span'); s.className='op '+cls; s.textContent=t; return s; }
+  eq.appendChild(slot('s1',2));
+  eq.appendChild(op('p1','+'));
+  eq.appendChild(slot('s2',3));
+  eq.appendChild(op('p2','= 5'));
+
+  // 눈처럼 내리는 과일
+  var snow=$('#snow'), flakes=[], W=0, H=0;
+  var dir={x:0,y:1}, tgt={x:0,y:1};
+  var reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function measure(){ var r=snow.getBoundingClientRect(); W=r.width; H=r.height; }
+  measure(); window.addEventListener('resize',measure);
+
+  if(!reduce){
+    for(var i=0;i<38;i++){
+      var sz=18+Math.random()*20, k=(sz-18)/20;
+      var el=document.createElement('div'); el.className='flake';
+      el.style.setProperty('--s',sz.toFixed(0)+'px');
+      el.style.setProperty('--o',(0.35+k*0.5).toFixed(2));
+      el.appendChild(fruitSvg(Math.floor(Math.random()*4)));
+      snow.appendChild(el);
+      flakes.push({el:el,s:sz,x:Math.random()*W,y:Math.random()*H,
+        v:40+k*55+Math.random()*12, amp:10+Math.random()*8, w:0.8+Math.random()*0.6, ph:Math.random()*6.28});
+    }
+    var last=0;
+    (function frame(t){
+      var dt=Math.min(0.05,(t-last)/1000); last=t;
+      dir.x+=(tgt.x-dir.x)*0.08; dir.y+=(tgt.y-dir.y)*0.08;
+      var n=Math.hypot(dir.x,dir.y)||1, dx=dir.x/n, dy=dir.y/n, px=-dy, py=dx;
+      for(var j=0;j<flakes.length;j++){
+        var f=flakes[j], m=f.s+20;
+        f.x+=dx*f.v*dt; f.y+=dy*f.v*dt;
+        if(f.x>W+m){ f.x=-m; f.y=Math.random()*H; } else if(f.x<-m){ f.x=W+m; f.y=Math.random()*H; }
+        if(f.y>H+m){ f.y=-m; f.x=Math.random()*W; } else if(f.y<-m){ f.y=H+m; f.x=Math.random()*W; }
+        var sw=Math.sin(t/1000*f.w+f.ph);
+        f.el.style.transform='translate3d('+(f.x+px*sw*f.amp).toFixed(1)+'px,'+(f.y+py*sw*f.amp).toFixed(1)+'px,0) rotate('+(sw*20).toFixed(1)+'deg)';
+      }
+      requestAnimationFrame(frame);
+    })(0);
+  }
+
+  // 아직 만들지 않은 화면은 안내만 보여줌
+  var tt=0;
+  function toast(t){
+    var el=$('#toast'); el.textContent=t; el.classList.add('on');
+    clearTimeout(tt); tt=setTimeout(function(){ el.classList.remove('on'); },1600);
+  }
+  document.querySelectorAll('[data-name]').forEach(function(b){
+    b.addEventListener('click',function(){ var nm=b.getAttribute('data-name'); if(nm==='싱글 플레이') openGame(); else if(nm==='설정') openSettings(); else if(nm==='멀티 플레이') openMulti(); else toast(nm+' 화면은 다음 단계에서 만들어요'); });
+  });
+
+  // 규칙 보기 화면
+  function slot2(f,n){ var d=document.createElement('div'); d.className='slot'; d.appendChild(cardEl(f,n)); return d; }
+  function txt(t,c){ var e=document.createElement('span'); e.textContent=t; if(c) e.className=c; return e; }
+  var okRow=$('#exOk'), noRow=$('#exNo');
+  okRow.appendChild(slot2(0,2)); okRow.appendChild(txt('+')); okRow.appendChild(slot2(0,3)); okRow.appendChild(txt('= 5','res'));
+  noRow.appendChild(slot2(0,2)); noRow.appendChild(txt('+')); noRow.appendChild(slot2(1,3)); noRow.appendChild(txt('✕','res'));
+
+  var rulesEl=$('#rules'), appEl=$('#app');
+  function openRules(){ rulesEl.hidden=false; appEl.classList.add('rules-open'); $('#rback').focus(); }
+  function closeRules(){ rulesEl.hidden=true; appEl.classList.remove('rules-open'); $('#help').focus(); }
+  $('#help').addEventListener('click',openRules);
+  $('#rback').addEventListener('click',closeRules);
+  $('#rclose').addEventListener('click',closeRules);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!rulesEl.hidden) closeRules(); });
+
+  // ===== 게임 엔진: 싱글은 내 폰에서, 멀티는 방장 폰에서 실행 =====
+  // 멀티 판정: 5개가 보인 순간부터 각자 폰에서 반응 시간을 재서 보내고, 방장이 가장 빠른 기록을 승자로 정한다.
+  // 나(남) → 서 → 북 → 동 순서의 시계방향. 각자 화면에서는 자기 자리가 항상 아래쪽에 온다.
+  var LV={easy:{flip:1500,rt:[1000,2000],fb:0.05},normal:{flip:1150,rt:[650,1400],fb:0.03},hard:{flip:900,rt:[400,950],fb:0.02}};
+  var CFG={level:'normal',ear:true,sound:true,helper:true,vib:true};
+  var GOAL=29, DIST=[1,1,1,1,1,2,2,2,3,3,3,4,4,5], AINAMES=['보리','감자','호두'], GRACE=500, RING_WIN=800, DEF_RTT=350, RTT={};
+  var gameEl=$('#game'), S=null, GEN=0, EV=0, SID=0, MODE='solo', V=null, MY=0, ready=false, earOffAt=0, AC=null;
+  var seenBell=0, bellSeenAt=0, holdUntil=0, lastEvShown=0, rangLocal=0;
+  function rand(a,b){ return a+Math.random()*(b-a); }
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+  function josa(n){ var c=n.charCodeAt(n.length-1); return (c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28!==0)?'이':'가'; }
+  function store(k,v){ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,String(v)); }catch(e){ return null; } }
+  function vib(ms){ try{ if(CFG.vib&&navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+  function netEmit(t,d){ if(NR){ try{ NR.emit(t,d).catch(mEmitErr); }catch(e){} } }
+
+  /* 소리 */
+  function actx(){
+    try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){ AC=null; }
+    return AC;
+  }
+  function ding(){
+    if(!CFG.sound) return; var ac=actx(); if(!ac) return; var t=ac.currentTime;
+    [880,1760,2637,3520].forEach(function(f,i){
+      var o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.28/(i+1),t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+1.2/(i*0.6+1));
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+1.3);
+    });
+  }
+  function buzz(){
+    if(!CFG.sound) return; var ac=actx(); if(!ac) return; var t=ac.currentTime;
+    var o=ac.createOscillator(), g=ac.createGain();
+    o.type='square'; o.frequency.setValueAtTime(150,t); o.frequency.linearRampToValueAtTime(110,t+0.25);
+    g.gain.setValueAtTime(0.12,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.28);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+0.3);
+  }
+  function tick(){
+    if(!CFG.sound) return; var ac=actx(); if(!ac) return; var t=ac.currentTime;
+    var o=ac.createOscillator(), g=ac.createGain();
+    o.type='triangle'; o.frequency.value=420;
+    g.gain.setValueAtTime(0.06,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+0.06);
+  }
+
+  /* 상태 보조 (엔진) */
+  function later(fn,ms){ var g=S&&S.gen; return setTimeout(function(){ if(S&&S.gen===g) fn(); },ms); }
+  function total(p){ return p.deck.length+p.up.length; }
+  function topOf(p){ return p.up[p.up.length-1]||null; }
+  function calc(){ var t=[0,0,0,0]; S.players.forEach(function(p){ var c=topOf(p); if(c) t[c.f]+=c.n; }); return t; }
+  function setEv(e){ e.id=++EV; S.ev=e; }
+  function publish(){
+    var o={g:1,id:++mSID,goal:S.goal,code:(MODE==='host'?mCode:''),phase:S.phase,turn:S.turn,rule:CFG.ear,bellId:S.bellId,ev:S.ev,end:S.end,
+      seats:S.players.map(function(p){ var c=topOf(p); return {name:p.name,peer:p.peer,human:p.human,empty:!p.active,n:total(p),top:c?[c.f,c.n]:null,ear:p.human?!!p.ear:true}; }),
+      totals:calc()};
+    mLastSnap=o;
+    view(o,0);
+    if(MODE==='host') mBcast(o);
+  }
+  function seatByPeer(peer){
+    if(!S) return -1;
+    for(var i=0;i<4;i++) if(S.players[i].peer&&S.players[i].peer===peer) return i;
+    return -1;
+  }
+
+  /* 화면 (내 자리 m이 항상 아래) */
+  function gmsg(t,k){ var el=$('#gstatus'); el.textContent=t; el.className='status'+(k?' '+k:''); }
+  function ringFx(seat,m,bad){
+    var b=$('#tbell'); b.classList.remove('ring'); void b.offsetWidth;
+    b.classList.toggle('bad',!!bad); b.classList.add('ring');
+    var sl=$('#slot'+((seat-m+4)%4)); sl.classList.remove('rang'); void sl.offsetWidth; sl.classList.add('rang');
+    setTimeout(function(){ sl.classList.remove('rang'); },650);
+  }
+  function nmOf(o,s,m){ return s===m?'나':o.seats[s].name; }
+  function view(o,m){
+    V=o; MY=m;
+    if(o.phase==='ready') seenBell=0;
+    if(o.phase==='bell'&&o.bellId!==seenBell){ seenBell=o.bellId; bellSeenAt=performance.now(); }
+    var ev=o.ev, newEv=!!(ev&&ev.id!==lastEvShown);
+    for(var j=0;j<4;j++){
+      var s=(m+j)%4, si=o.seats[s], sl=$('#slot'+j);
+      sl.innerHTML='';
+      if(si.top){
+        var el=cardEl(si.top[0],si.top[1]);
+        if(newEv&&ev.type==='flip'&&ev.seat===s) el.classList.add('new');
+        sl.appendChild(el);
+      }
+      sl.classList.toggle('turn',o.phase==='run'&&o.turn===s);
+      $('#cnt'+j).textContent=si.n>0?si.n+'장':'탈락';
+      if(j>0){ $('#who'+j).textContent=si.name; $('#opp'+j).classList.toggle('out',si.n===0&&!si.empty); $('#opp'+j).classList.toggle('empty',!!si.empty); }
+      $('#ear'+j).classList.toggle('on',j===0?ready:!!si.ear);
+    }
+    o.totals.forEach(function(v,f){
+      var box=$('#tc'+f); box.innerHTML='';
+      var d=document.createElement('div'); d.className='chip'+(v===5?' hot':'');
+      d.appendChild(fruitSvg(f)); d.appendChild(document.createTextNode(String(v))); box.appendChild(d);
+    });
+    $('#goalTxt').textContent=(o.goal>=56)?'상대 카드를 모두 가져오면 승리':'먼저 '+o.goal+'장 모으기';
+    $('#flip').disabled=!(o.phase==='run'&&o.turn===m);
+    $('#ready').disabled=!o.rule;
+    $('#ready').classList.toggle('wait',o.phase==='ready'&&!!o.rule&&!ready);
+    $('#cross').classList.toggle('noear',!o.rule);
+    $('#cross').classList.toggle('nohelp',!CFG.helper);
+    if(o.phase==='ready'){
+      if(!o.rule) gmsg('곧 시작해요');
+      else{
+        var hs=0, rd=0;
+        o.seats.forEach(function(x,i){ if(x.human){ hs++; if(i===m?ready:x.ear) rd++; } });
+        if(!ready) gmsg('귀 잡기를 누르고 있으면 시작해요');
+        else gmsg('준비 완료! '+(rd<hs?'다른 사람을 기다려요 ('+rd+'/'+hs+')':'곧 시작해요'),'good');
+      }
+    }
+    if(newEv){ lastEvShown=ev.id; handleEv(o,m); }
+    if(o.end) showResult(o,m); else $('#gres').hidden=true;
+  }
+  function handleEv(o,m){
+    var ev=o.ev, mine=(o.phase==='run'&&o.turn===m), free=performance.now()>=holdUntil;
+    var hint=(o.rule&&!ready)?'귀를 잡고 카드를 내세요':'내 차례예요. 카드를 내세요';
+    var who=nmOf(o,ev.seat==null?0:ev.seat,m);
+    if(ev.type==='go'||ev.type==='resume'||ev.type==='turn'){ if(free) gmsg(mine?hint:''); }
+    else if(ev.type==='flip'){ tick(); if(free) gmsg(mine?hint:''); }
+    else if(ev.type==='win'){
+      holdUntil=0; if(!(ev.seat===m&&rangLocal===o.bellId)) ding(); vib(30); ringFx(ev.seat,m,false);
+      var tt=(ev.times&&ev.times.length>1)?' ('+ev.times.map(function(t){ return nmOf(o,t.seat,m)+' '+t.ms+'ms'; }).join(' · ')+')':(ev.ms?' ('+ev.ms+'ms)':'');
+      if(ev.seat===m) gmsg('땡! '+ev.n+'장 가져왔어요'+tt,'good');
+      else gmsg(who+josa(who)+' 먼저 땡! '+ev.n+'장 가져갔어요'+(ev.times&&ev.times.length>1?tt:''),'bad');
+    }else if(ev.type==='false'){
+      holdUntil=0; buzz(); vib(80);
+      if(ev.why==='ear'){
+        var how=(ev.how==='release')?'귀를 놓아서':'귀 없이 벨을 쳐서';
+        if(ev.seat===m) gmsg(how+' 벌칙! 카드 '+ev.given+'장을 나눠줬어요','bad');
+        else gmsg(who+josa(who)+' '+how+' 벌칙! 카드를 한 장씩 나눠줬어요','good');
+      }else{
+        ringFx(ev.seat,m,true);
+        if(ev.seat===m) gmsg('5개가 아니에요! 카드 '+ev.given+'장을 나눠줬어요','bad');
+        else gmsg(who+josa(who)+' 헛벨! 카드를 한 장씩 나눠줬어요','good');
+      }
+    }else if(ev.type==='left'){
+      holdUntil=performance.now()+3500; var ln=ev.name||'상대';
+      gmsg(ln+josa(ln)+' 나갔어요'+(ev.ai?' · AI가 이어받아요':''),'bad');
+    }else if(ev.type==='warn'){
+      buzz(); vib(60);
+      if(ev.seat===m){
+        gmsg('경고! '+(ev.why==='release'?'귀를 놓았어요':'귀 없이 벨을 눌렀어요')+'. 이번만 봐줘요, 다음엔 카드를 줘요','bad');
+        holdUntil=performance.now()+2500;
+      }else gmsg(who+josa(who)+' 경고를 받았어요','good');
+    }
+  }
+  function showResult(o,m){
+    var box=$('#gres');
+    var guest=(MODE==='client');
+    $('#gagain').hidden=guest; $('#grwait').hidden=!guest;
+    $('#ghome').textContent=MODE==='solo'?'처음으로':(guest?'방 나가기':'방으로');
+    if(!box.hidden) return;
+    var tot=o.seats.map(function(x){ return x.n; }), w=o.end.w, won=(w===m);
+    $('#grt').textContent=won?'승리!':'아쉬워요';
+    $('#grs').textContent=(o.end.reason==='left'&&won)?'상대가 나가서 승리했어요':tot[m]===0?'카드를 모두 잃었어요':(won?(o.goal>=56?'상대 카드를 모두 가져왔어요':o.goal+'장을 먼저 모았어요'):o.seats[w].name+josa(o.seats[w].name)+' 이겼어요');
+    var ul=$('#grl'); ul.innerHTML='';
+    o.seats.map(function(x,i){ return x.empty?null:{n:i===m?'나':x.name,c:x.n,me:i===m}; }).filter(Boolean)
+      .sort(function(a,b){ return b.c-a.c; })
+      .forEach(function(r){
+        var li=document.createElement('li'); if(r.me) li.className='me';
+        var a=document.createElement('span'); a.textContent=r.n;
+        var b=document.createElement('span'); b.textContent=r.c+'장';
+        li.appendChild(a); li.appendChild(b); ul.appendChild(li);
+      });
+    var st=o.end.stats[m]||{w:0,f:0,b:null}, prev=parseInt(store('ddaeng5:best'),10);
+    var lines=['벨 성공 '+st.w+'회','헛벨 '+st.f+'회'];
+    if(st.b!==null){
+      lines.push('이번 판 가장 빠른 반응 '+st.b+'ms');
+      if(!(prev>0)||st.b<prev){ store('ddaeng5:best',st.b); lines.push('최고 기록을 새로 세웠어요'); }
+      else lines.push('내 최고 기록 '+prev+'ms');
+    }
+    var bx=$('#grst'); bx.innerHTML='';
+    lines.forEach(function(t,k){ if(k) bx.appendChild(document.createElement('br')); bx.appendChild(document.createTextNode(t)); });
+    box.hidden=false; if(!guest) $('#gagain').focus(); else $('#ghome').focus();
+  }
+
+  /* 게임 진행 (방장/싱글) */
+  function startGame(mode,meta,fill,sync){
+    actx(); MODE=mode;
+    var fillAI=(mode==='solo')||fill!==false, metas;
+    if(mode==='solo') metas=[{human:true},{},{},{}];
+    else if(fillAI) metas=meta;
+    else{
+      // AI 없이: 모인 사람만 앉는다 (둘이면 마주 보게, 셋이면 아래·왼쪽·오른쪽)
+      var hs=[]; for(var q=0;q<4;q++) if(meta[q]&&meta[q].human) hs.push(meta[q]);
+      var map={1:[0],2:[0,2],3:[0,1,3],4:[0,1,2,3]}[hs.length]||[0];
+      metas=[{},{},{},{}]; hs.forEach(function(h,k){ metas[map[k]]=h; });
+    }
+    S={gen:++GEN,phase:'ready',turn:0,flipId:0,bellId:0,bellT0:0,lockUntil:0,flipT:0,idleT:0,decT:0,startT:0,reports:[],ai:[],aiMin:Infinity,
+       fillAI:fillAI,sync:!!sync,goal:GOAL,players:[],stats:[0,1,2,3].map(function(){ return {w:0,f:0,b:null}; })};
+    var ai=0, act=[];
+    for(var i=0;i<4;i++){
+      var m=(metas&&metas[i])||{};
+      var human=(mode==='solo')?(i===0):!!m.human;
+      var active=human||fillAI;
+      var p={i:i,human:human,active:active,peer:(mode==='solo')?null:(m.peer||null),
+        name:human?((mode==='solo')?'나':m.nick):(active?AINAMES[ai++]:''),deck:[],up:[],speed:rand(0.85,1.15),warned:false,ear:false};
+      S.players.push(p); if(active) act.push(p);
+    }
+    var deck=[]; for(var f=0;f<4;f++) DIST.forEach(function(n){ deck.push({f:f,n:n}); });
+    shuffle(deck).forEach(function(c,k){ act[k%act.length].deck.push(c); });
+    S.goal=Math.min(deck.length,2*Math.ceil(deck.length/act.length)+1);   // 4명 29장, 3명 39장, 2명은 전부
+    resetEarUI(); lastEvShown=0; seenBell=0; holdUntil=0;
+    $('#gres').hidden=true; $('#tbell').classList.remove('ring');
+    setEv({type:'ready'}); publish();
+    if(!CFG.ear) S.startT=later(function(){ S.phase='run'; setEv({type:'go'}); beginTurn(); },1000);
+  }
+  function startGate(){
+    if(!S||S.phase!=='ready'||!CFG.ear) return;
+    clearTimeout(S.startT);
+    var hs=S.players.filter(function(p){ return p.human; });
+    if(hs.length&&hs.every(function(p){ return p.ear; })){
+      S.startT=later(function(){
+        if(S.phase==='ready'&&S.players.every(function(p){ return !p.human||p.ear; })){ S.phase='run'; setEv({type:'go'}); beginTurn(); }
+      },900);
+    }
+  }
+  function nextSeat(from){
+    for(var k=0;k<4;k++){ var q=S.players[(from+k)%4]; if(total(q)>0) return q.i; }
+    return -1;
+  }
+  function beginTurn(){
+    if(!S||S.phase==='over') return;
+    var s=nextSeat(S.turn);
+    if(s<0){ var e=checkEnd(); finish(e>=0?e:0); return; }
+    S.turn=s; S.phase='run';
+    publish();
+    if(S.players[s].human) idleLoop(s,8000);
+    else S.flipT=later(function(){ flip(S.turn); },LV[CFG.level].flip);
+  }
+  function idleLoop(s,ms){
+    S.idleT=later(function(){
+      if(S.phase!=='run'||S.turn!==s) return;
+      var p=S.players[s];
+      if(!p.human||!CFG.ear||p.ear) flip(s); else idleLoop(s,1000);   // 귀를 안 잡고 있으면 자동으로 내지 않고 기다림
+    },ms);
+  }
+  function flip(i){
+    if(!S||S.phase!=='run'||S.turn!==i) return;
+    clearTimeout(S.flipT); clearTimeout(S.idleT);
+    var p=S.players[i];
+    if(p.deck.length===0&&p.up.length>0){ p.deck=shuffle(p.up); p.up=[]; }
+    if(p.deck.length===0){ S.turn=(i+1)%4; beginTurn(); return; }
+    p.up.push(p.deck.shift());
+    S.turn=(i+1)%4; S.flipId++; setEv({type:'flip',seat:i});
+    if(calc().indexOf(5)>=0){ S.phase='bell'; armBells(); publish(); }
+    else{ maybeFalse(); beginTurn(); }
+  }
+  function armBells(){
+    S.bellId++; S.reports=[]; S.bellT0=performance.now();
+    var r=LV[CFG.level].rt, list=[];
+    S.players.forEach(function(p){ if(!p.human&&total(p)>0) list.push({seat:p.i,ms:rand(r[0],r[1])*p.speed}); });
+    list.sort(function(a,b){ return a.ms-b.ms; });
+    S.ai=list; S.aiMin=list.length?list[0].ms:Infinity;
+    S.decT=0; scheduleDecide();    // AI 없이 사람끼리만이면 누군가 칠 때까지 계속 기다림 (실제 게임처럼)
+  }
+  // 지금까지 가장 빠른 기록보다 빨랐을 사람이 더 있을 수 있는 시간까지만 기다린다
+  // (안 친 친구가 더 빨랐다면 그 기록은 '가장 빠른 기록 + 그 친구의 통신 지연' 안에 도착함)
+  function scheduleDecide(){
+    clearTimeout(S.decT); S.decT=0;
+    var c=S.reports.slice(); if(S.ai.length) c.push(S.ai[0]);
+    if(!c.length) return;
+    var best=Math.min.apply(null,c.map(function(x){ return x.ms; })), wait=0;
+    S.players.forEach(function(p){
+      if(!p.human||total(p)===0||S.reports.some(function(x){ return x.seat===p.i; })) return;
+      if(p.peer){ var r=RTT[p.peer]; wait=Math.max(wait,(S.sync?0.5:1)*(r==null?DEF_RTT:r)*1.25+50); }
+    });
+    S.decT=later(decide,Math.max(0,S.bellT0+best+wait-performance.now()));
+  }
+  function humansAllReported(){
+    return S.players.every(function(p){
+      return !p.human||total(p)===0||S.reports.some(function(x){ return x.seat===p.i; });
+    });
+  }
+  function report(seat,ms){
+    if(!S||S.phase!=='bell') return;
+    if(S.reports.some(function(x){ return x.seat===seat; })) return;
+    var adj=Math.max(0,ms), pr=S.players[seat].peer;
+    if(S.sync&&pr){
+      var est=(RTT[pr]!=null)?RTT[pr]:Math.max(0,(performance.now()-S.bellT0)-ms);
+      adj=adj+est/2;           // 친구 화면에 5개가 늦게 뜬 시간(한 방향 지연)만큼 더해서 같은 시각 기준으로 맞춤
+    }
+    S.reports.push({seat:seat,ms:adj,raw:Math.max(0,ms)});
+    if(humansAllReported()) decide(); else scheduleDecide();
+  }
+  function decide(){
+    if(!S||S.phase!=='bell') return;
+    clearTimeout(S.decT);
+    var c=S.reports.slice(); if(S.ai.length) c.push(S.ai[0]);
+    if(!c.length){ S.phase='run'; beginTurn(); return; }   // 아무도 안 쳤으면 계속 진행
+    c.sort(function(a,b){ return a.ms-b.ms; });
+    win(c[0].seat,c[0].ms,c.filter(function(x){ return S.players[x.seat].human; }));
+  }
+  function maybeFalse(){
+    if(Math.random()>=LV[CFG.level].fb) return;
+    var ais=S.players.filter(function(p){ return !p.human&&total(p)>0; });
+    if(!ais.length) return;
+    var who=ais[Math.floor(Math.random()*ais.length)], id=S.flipId;
+    later(function(){ if(S.phase==='run'&&S.flipId===id) falseBell(who.i,''); },rand(350,700));
+  }
+  function win(i,ms,times){
+    S.phase='pause'; clearTimeout(S.decT);
+    var w=S.players[i], pile=[];
+    S.players.forEach(function(q){ pile=pile.concat(q.up); q.up=[]; });
+    shuffle(pile); w.deck=w.deck.concat(pile);
+    var st=S.stats[i], shown=0;
+    if(w.human){ shown=Math.round(ms); st.w++; if(st.b===null||shown<st.b) st.b=shown; }
+    setEv({type:'win',seat:i,n:pile.length,ms:shown,times:(times||[]).map(function(x){ return {seat:x.seat,ms:Math.round(x.ms)}; })}); publish();
+    later(resume,1100);
+  }
+  function falseBell(i,why,how){
+    clearTimeout(S.flipT); clearTimeout(S.idleT); S.phase='pause';
+    var me=S.players[i], given=0;
+    S.players.forEach(function(q){
+      if(q===me||total(q)===0) return;
+      var c=me.deck.length?me.deck.pop():(me.up.length?me.up.shift():null);
+      if(c){ q.deck.push(c); given++; }
+    });
+    if(me.human) S.stats[i].f++;
+    setEv({type:'false',seat:i,given:given,why:why||'',how:how||''}); publish();
+    later(resume,1000);
+  }
+  function violation(i,why){
+    if(!CFG.ear||!S||S.phase!=='run') return;
+    var p=S.players[i]; if(!p||!p.human||total(p)===0) return;
+    if(!p.warned){ p.warned=true; setEv({type:'warn',seat:i,why:why}); publish(); return; }
+    falseBell(i,'ear',why);
+  }
+  function onEar(seat,v,auto){
+    if(!S) return;
+    var p=S.players[seat]; if(!p||!p.human) return;
+    var was=!!p.ear; p.ear=v;
+    if(S.phase==='ready') startGate();
+    publish();
+    if(!v&&was&&!auto&&S.phase==='run') violation(seat,'release');
+  }
+  function resume(){
+    var e=checkEnd();
+    if(e>=0){ finish(e); return; }
+    S.lockUntil=performance.now()+450;
+    setEv({type:'resume'}); beginTurn();
+  }
+  function checkEnd(){
+    var tot=S.players.map(total), g=-1;
+    tot.forEach(function(n,i){ if(g<0&&n>=S.goal) g=i; });
+    if(g>=0) return g;
+    var alive=[]; tot.forEach(function(n,i){ if(n>0) alive.push(i); });
+    var hAlive=S.players.some(function(p){ return p.human&&tot[p.i]>0; });
+    if(!hAlive){ var best=0; tot.forEach(function(n,i){ if(n>tot[best]) best=i; }); return best; }
+    if(alive.length===1) return alive[0];
+    return -1;
+  }
+  function finish(w,reason){
+    S.phase='over'; clearTimeout(S.flipT); clearTimeout(S.idleT); clearTimeout(S.decT); clearTimeout(S.startT);
+    S.end={w:w,reason:reason||'',stats:S.stats.map(function(x){ return {w:x.w,f:x.f,b:x.b}; })};
+    setEv({type:'end'}); publish();
+  }
+
+  /* 내 조작 (싱글/방장은 엔진 직접 호출, 참가자는 방장에게 전송) */
+  function resetEarUI(){
+    ready=false; var rb=$('#ready'); rb.classList.remove('on','wait','nudge'); rb.setAttribute('aria-pressed','false');
+    $('#ear0').classList.remove('on');
+  }
+  function setReady(v,auto){
+    if(ready===v) return;
+    ready=v; if(!v) earOffAt=performance.now();
+    var rb=$('#ready'); rb.classList.toggle('on',v); rb.setAttribute('aria-pressed',v?'true':'false');
+    $('#ear0').classList.toggle('on',v);
+    if(MODE==='client'){ netEmit('ready',{on:v,auto:!!auto}); if(V) view(V,MY); }
+    else if(S) onEar(0,v,!!auto);
+  }
+  function nudge(){ var rb=$('#ready'); rb.classList.remove('nudge'); void rb.offsetWidth; rb.classList.add('nudge'); }
+  function pressFlip(){
+    if(!V||V.phase!=='run'||V.turn!==MY) return;
+    if(V.rule&&!ready){
+      gmsg('귀를 잡고 카드를 내세요','bad'); holdUntil=performance.now()+2000; nudge(); return;
+    }
+    if(MODE==='client') netEmit('flip',{}); else flip(0);
+  }
+  function pressBell(){
+    if(!V||V.phase==='ready'||V.phase==='pause'||V.end) return;
+    if(V.rule){
+      // 귀를 잡고 있던 손으로 벨을 친다: 귀를 놓으면서(놓은 직후) 쳐야 하고, 귀를 잡은 채로는 칠 수 없다
+      if(ready){
+        gmsg('귀를 놓으면서 벨을 쳐요. 귀를 잡은 채로는 칠 수 없어요','bad'); holdUntil=performance.now()+2500; nudge(); return;
+      }
+      if(performance.now()-earOffAt>RING_WIN){
+        gmsg('귀를 잡고 있다가 놓으면서 벨을 쳐요','bad'); holdUntil=performance.now()+2500; nudge();
+        if(V.phase==='run'){ if(MODE==='client') netEmit('bell',{k:'noear'}); else violation(0,'nobell'); }
+        return;
+      }
+    }
+    var g=$('#gbell'); g.classList.add('hit'); setTimeout(function(){ g.classList.remove('hit'); },110);
+    if(V.rule) earOffAt=0;      // 한 번 놓은 귀로 벨을 여러 번 칠 수 없음
+    if(V.phase==='bell'){
+      ding(); vib(30); rangLocal=V.bellId;      // 내가 친 소리는 판정을 기다리지 않고 바로 낸다 (실제 벨처럼)
+      var ms=Math.round(performance.now()-bellSeenAt);
+      if(MODE==='client'){ netEmit('bell',{k:'hit',id:V.bellId,ms:ms}); ringFx(MY,false); gmsg('판정 중…'); holdUntil=performance.now()+1500; }
+      else{
+        report(0,ms);
+        if(S&&S.phase==='bell'){ ringFx(0,false); gmsg('판정 중…'); holdUntil=performance.now()+1500; }   // 친구 기록을 기다리는 동안에도 바로 반응
+      }
+    }else{
+      if(MODE==='client') netEmit('bell',{k:'false'});
+      else if(S&&performance.now()>=S.lockUntil) falseBell(0,'');
+    }
+  }
+  /* 방장: 친구가 보낸 조작 처리 */
+  function onNetFlip(m){
+    if(m.sameTab||!S) return;
+    var s=seatByPeer(m.peer); if(s<0) return;
+    if(S.phase==='run'&&S.turn===s&&(!CFG.ear||S.players[s].ear)) flip(s);
+  }
+  function onNetReady(m){
+    if(m.sameTab||!S) return;
+    var s=seatByPeer(m.peer); if(s<0) return;
+    var d=m.data||{}; onEar(s,!!d.on,!!d.auto);
+  }
+  function onPong(m){
+    if(m.sameTab) return;
+    var d=m.data; if(!d||typeof d.t!=='number') return;
+    var r=performance.now()-d.t;
+    if(r>=0&&r<5000) RTT[m.peer]=(RTT[m.peer]==null)?r:(0.6*RTT[m.peer]+0.4*r);
+  }
+  function onNetBell(m){
+    if(m.sameTab||!S) return;
+    var s=seatByPeer(m.peer); if(s<0) return;
+    var d=m.data||{};
+    if(d.k==='hit'){ if(S.phase==='bell'&&d.id===S.bellId&&isFinite(+d.ms)) report(s,Math.min(Math.max(+d.ms,0),30000)); }
+    else if(d.k==='false'){ if(S.phase==='run'&&performance.now()>=S.lockUntil) falseBell(s,''); }
+    else if(d.k==='noear'){ violation(s,'nobell'); }
+  }
+
+  /* 방장이 나가서 혼자 남은 참가자: 승리 창 */
+  function hostLeftWin(){
+    var o=V, m=MY;
+    o.end={w:m,reason:'hostleft',stats:[]};
+    $('#grt').textContent='승리!'; $('#grs').textContent='방장이 나가서 승리했어요';
+    var ul=$('#grl'); ul.innerHTML='';
+    o.seats.map(function(x,i){ return x.empty?null:{n:i===m?'나':x.name,c:x.n,me:i===m}; }).filter(Boolean)
+      .sort(function(a,b){ return b.c-a.c; })
+      .forEach(function(r){
+        var li=document.createElement('li'); if(r.me) li.className='me';
+        var a=document.createElement('span'); a.textContent=r.n;
+        var b=document.createElement('span'); b.textContent=r.c+'장';
+        li.appendChild(a); li.appendChild(b); ul.appendChild(li);
+      });
+    $('#grst').textContent='';
+    $('#gagain').hidden=true; $('#grwait').hidden=true; $('#ghome').textContent='방 나가기';
+    gmsg('');
+    $('#gres').hidden=false; $('#ghome').focus();
+  }
+  /* 화면 열기/닫기 */
+  function showGameUI(){ gameEl.hidden=false; appEl.classList.add('game-open'); }
+  function closeGameUI(){
+    resetEarUI(); V=null; $('#gres').hidden=true;
+    gameEl.hidden=true; appEl.classList.remove('game-open');
+  }
+  function openGame(){ startGame('solo'); showGameUI(); $('#gback').focus(); }
+  function startOnline(){
+    if(mRole!=='host'||S) return;
+    var hc=mLB.filter(function(x){ return x.human; }).length;
+    if(!mFill&&hc<2){ toast('AI 없이 하려면 두 명 이상이 필요해요'); return; }
+    startGame('host',mLB,mFill,mSync); showGameUI(); $('#gback').focus();
+  }
+  function openGameClient(){
+    MODE='client'; resetEarUI(); lastEvShown=0; seenBell=0; holdUntil=0; $('#gres').hidden=true; $('#tbell').classList.remove('ring');
+    showGameUI();
+  }
+  function closeGame(){
+    if(MODE==='client'&&mRole==='client'){ leaveMulti(''); return; }
+    var online=(MODE==='host'&&mRole==='host');
+    if(S){ clearTimeout(S.flipT); clearTimeout(S.idleT); clearTimeout(S.decT); clearTimeout(S.startT); }
+    S=null; closeGameUI();
+    if(online) mPublish();     // 방 로비로 돌아가고, 친구 화면도 로비로 돌린다
+  }
+  $('#gback').addEventListener('click',closeGame);
+  $('#ghome').addEventListener('click',closeGame);
+  $('#gagain').addEventListener('click',function(){
+    if(MODE==='client') return;
+    if(MODE==='host'){
+      var hc=mLB.filter(function(x){ return x.human; }).length;
+      if(!mFill&&hc<2){ toast('AI 없이 하려면 두 명 이상이 필요해요'); closeGame(); return; }
+      startGame('host',mLB,mFill,mSync);
+    }else startGame('solo');
+  });
+  $('#flip').addEventListener('pointerdown',function(e){ e.preventDefault(); pressFlip(); });
+  $('#flip').addEventListener('click',function(e){ if(e.detail===0) pressFlip(); });
+  $('#gbell').addEventListener('pointerdown',function(e){ e.preventDefault(); pressBell(); });
+  $('#gbell').addEventListener('click',function(e){ if(e.detail===0) pressBell(); });
+  (function(){
+    var rb=$('#ready');
+    rb.addEventListener('pointerdown',function(e){
+      e.preventDefault(); if(!V||!V.rule||V.end) return;
+      try{ rb.setPointerCapture(e.pointerId); }catch(x){}
+      setReady(true);
+    });
+    rb.addEventListener('pointerup',function(){ setReady(false); });
+    ['pointercancel','lostpointercapture'].forEach(function(t){ rb.addEventListener(t,function(){ setReady(false,true); }); });
+    rb.addEventListener('contextmenu',function(e){ e.preventDefault(); });
+  })();
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!gameEl.hidden&&$('#gres').hidden) closeGame(); });
+  /* 키보드 조작: 마우스는 한 번에 하나만 누를 수 있어서, 귀 잡기(누르고 있기)와 카드 내기·벨을 키보드로 동시에 할 수 있게 함 */
+  function kbActive(e){ return !gameEl.hidden&&$('#gres').hidden&&!(e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))&&!e.ctrlKey&&!e.metaKey&&!e.altKey; }
+  function kbEar(c){ return c==='KeyA'||c==='ShiftLeft'||c==='ShiftRight'; }
+  document.addEventListener('keydown',function(e){
+    if(!kbActive(e)) return;
+    var c=e.code;
+    if(kbEar(c)||c==='KeyS'||c==='Space'||c==='KeyD'||c==='Enter'){
+      e.preventDefault();
+      var ae=document.activeElement; if(ae&&ae.tagName==='BUTTON') ae.blur();   // 포커스된 버튼이 키를 한 번 더 누르지 않게
+      if(e.repeat) return;
+      if(kbEar(c)){ if(V&&V.rule&&!V.end) setReady(true); }
+      else if(c==='KeyS'||c==='Space') pressFlip();
+      else pressBell();
+    }
+  });
+  document.addEventListener('keyup',function(e){
+    if(kbEar(e.code)&&!gameEl.hidden) setReady(false);
+  });
+  window.addEventListener('blur',function(){ if(ready) setReady(false,true); });
+
+  // ===== 설정 화면 =====
+  var setEl=$('#settings');
+  var LVHINT={easy:'AI가 느리게 반응하고 가끔 헛벨을 쳐요.',normal:'AI가 적당한 속도로 반응해요.',hard:'AI가 빠르게 반응해서 먼저 치기 어려워요.'};
+  try{
+    var saved=JSON.parse(store('ddaeng5:cfg')||'null');
+    if(saved){
+      if(LV[saved.level]) CFG.level=saved.level;
+      ['ear','helper','sound','vib'].forEach(function(k){ if(typeof saved[k]==='boolean') CFG[k]=saved[k]; });
+    }
+  }catch(e){}
+  function saveCfg(){ store('ddaeng5:cfg',JSON.stringify(CFG)); }
+  if(typeof navigator.vibrate!=='function') $('#optVib').closest('li').hidden=true;   // 진동 미지원 기기(아이폰 등)에서는 항목 숨김
+  function paintSettings(){
+    document.querySelectorAll('#lvSeg button').forEach(function(b){ b.setAttribute('aria-pressed',b.getAttribute('data-lv')===CFG.level?'true':'false'); });
+    $('#lvHint').textContent=LVHINT[CFG.level];
+    $('#optEar').checked=CFG.ear; $('#optHelper').checked=CFG.helper; $('#optSound').checked=CFG.sound; $('#optVib').checked=CFG.vib;
+  }
+  function openSettings(){ paintSettings(); setEl.hidden=false; appEl.classList.add('settings-open'); $('#sback').focus(); }
+  function closeSettings(){ setEl.hidden=true; appEl.classList.remove('settings-open'); $('#help').focus(); }
+  document.querySelectorAll('#lvSeg button').forEach(function(b){
+    b.addEventListener('click',function(){ CFG.level=b.getAttribute('data-lv'); saveCfg(); paintSettings(); });
+  });
+  [['optEar','ear'],['optHelper','helper'],['optSound','sound'],['optVib','vib']].forEach(function(pr){
+    $('#'+pr[0]).addEventListener('change',function(e){
+      CFG[pr[1]]=e.target.checked; saveCfg();
+      if(pr[1]==='sound'&&CFG.sound){ ding(); }
+      if(pr[1]==='vib'&&CFG.vib){ vib(40); }
+    });
+  });
+  $('#sback').addEventListener('click',closeSettings);
+  $('#sclose').addEventListener('click',closeSettings);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!setEl.hidden) closeSettings(); });
+
+  // ===== 멀티 플레이 방 (방 코드로 만들기/입장) =====
+  // 이 단계에서는 방 연결과 자리 표시까지. 실제 온라인 대전 진행은 다음 단계에서 연결합니다.
+  var multiEl=$('#multi'), RM=null, NR=null, mRole='none', mCode='', mHostPeer=null, mMyPeer=null, mSeat=0;
+  var mNet='platform', mFill=true, mSync=false, mLastId=0, mSID=0, mLB=[], mHB=0, mHelloT=0, mUnsubs=[], mLastSnap=null;
+  function cleanNick(v){ v=String(v==null?'':v).replace(/[^\p{L}\p{N} ]/gu,'').trim().slice(0,8); return v||'친구'; }
+  function genCode(){ var cs='abcdefghjkmnpqrstuvwxyz23456789', r=''; for(var i=0;i<4;i++) r+=cs[Math.floor(Math.random()*cs.length)]; return r; }
+  function mErr(t){ $('#mErr').textContent=t||''; }
+  function mNoteText(t){ $('#mNote').textContent=t; }
+  function mPaintReady(){
+    var ok=!!RM, busy=(mRole!=='none');
+    $('#mkRoom').disabled=busy; $('#joinRoom').disabled=busy;
+    mNoteText(ok?'친구도 이 페이지를 열 수 있어야 해요. 공유 설정에서 친구를 초대해 주세요.':'위의 방 코드 방식은 로그인한 Claude 계정(이 페이지에 초대받은 계정)에서만 돼요. 로그인 없이 하려면 아래 \u201c직접 연결\u201d을 쓰세요.');
+  }
+  try{
+    if(window.claude&&typeof window.claude.use==='function'){
+      window.claude.use('room').then(function(r){ RM=r||null; mPaintReady(); mInitDiag(); },function(){ RM=null; mPaintReady(); mDiagPaint(); });
+    }else{ mPaintReady(); mDiagPaint(); }
+  }catch(e){ mPaintReady(); mDiagPaint(); }
+  // 연결 상태 표시: 지금 이 페이지를 열어 둔 기기 수가 보이면 방 기능이 켜져 있다는 뜻
+  function mDiagPaint(){
+    var el=$('#mDiag'), el2=$('#mDiag2'); if(!el) return;
+    var txt;
+    if(!RM){ txt='방 기능: 사용할 수 없음 (로그인하지 않았거나, 이 페이지에 초대받지 않은 계정이에요)'; }
+    else{
+      var n='', c='';
+      try{ n=RM.peers().length; }catch(e){}
+      try{ c=RM.connected()?'연결됨':'연결 중'; }catch(e){}
+      txt='방 기능: 사용 가능 · '+c+(n!==''?' · 지금 이 페이지를 연 기기 '+n+'대':'');
+    }
+    el.textContent=txt; if(el2) el2.textContent=txt;
+  }
+  // 메시지 전송이 거절되면(권한 부족 등) 화면에 이유를 보여준다
+  var mEmitErrAt=0;
+  function mEmitErr(e){
+    if(performance.now()-mEmitErrAt<3000) return; mEmitErrAt=performance.now();
+    var code=(e&&e.code)||'알 수 없음';
+    var t=code==='not_permitted'
+      ? '이 기기는 방에 메시지를 보낼 권한이 없어요. 이 페이지의 공유 설정에서 편집(Contributor 이상) 권한이 필요해요. (not_permitted)'
+      : '방에 메시지를 보내지 못했어요. ('+code+')';
+    mErr(t); var ln=$('#lobNote'); if(ln) ln.textContent=t;
+  }
+  function mInitDiag(){
+    mDiagPaint();
+    try{ RM.onPeers(mDiagPaint); RM.onConnection(mDiagPaint); }catch(e){}
+  }
+  // 이름 붙은 방을 못 쓰는 환경이면, 모두가 공유하는 기본 방에서 방 코드로 구분해서 쓴다
+  function lobbyRoom(code){
+    return {
+      emit:function(t,d){ return RM.emit(t,{_c:code,d:d}); },
+      on:function(t,fn,er){
+        return RM.on(t,function(m){ var x=m.data; if(!x||x._c!==code) return; fn(Object.assign({},m,{data:x.d})); },er);
+      },
+      onPeers:function(fn,er){ return RM.onPeers(fn,er); },
+      leave:function(){ return Promise.resolve(); }
+    };
+  }
+  async function joinNamed(code){
+    var timer, fail=new Promise(function(_,rej){ timer=setTimeout(function(){ rej({code:'timeout'}); },2500); });
+    try{
+      var r=await Promise.race([RM.join('dp5-'+code),fail]);
+      clearTimeout(timer); return r;
+    }catch(e){
+      clearTimeout(timer);
+      if(e&&(e.code==='not_permitted'||e.code==='limit_reached'||e.code==='upstream_error'||e.code==='timeout')) return lobbyRoom(code);
+      throw e;
+    }
+  }
+
+  function lobbySnap(){
+    return {code:mCode,fill:mFill,sync:mSync,seats:mLB.map(function(m){ return {name:m.human?m.nick:'AI',peer:m.peer||null,human:!!m.human,host:!!m.host}; })};
+  }
+  function mBcast(o){ if(NR&&o){ try{ NR.emit('state',o).catch(mEmitErr); }catch(e){} } }
+  function mPublish(){
+    var o=lobbySnap(); o.id=++mSID; mLastSnap=o; mRender(o); mBcast(o);
+  }
+  function mRender(o){
+    $('#mPick').hidden=true; $('#mRoom').hidden=false;
+    var p2pRoom=(o.code==='P2P');
+    $('#codeShow').textContent=p2pRoom?'직접 연결':o.code.toUpperCase(); $('#codeShow').classList.toggle('small',p2pRoom);
+    $('#codeNote').textContent=p2pRoom?(mRole==='host'?'아래에서 친구마다 연결 코드를 주고받아 초대하세요':'방장과 직접 연결된 방이에요'):'방 코드를 친구에게 알려 주세요';
+    $('#p2pInvite').hidden=!(p2pRoom&&mRole==='host');
+    var ul=$('#seatList'); ul.innerHTML='';
+    o.seats.forEach(function(x,i){
+      var li=document.createElement('li'); if(!x.human) li.className='ai';
+      var a=document.createElement('span');
+      a.textContent=x.human?(i===mSeat?x.name+' (나)':x.name):(o.fill===false?'비어 있음':'비어 있음 · AI가 채워요');
+      li.appendChild(a);
+      if(x.host){ var t=document.createElement('span'); t.className='tag'; t.textContent='방장'; li.appendChild(t); }
+      ul.appendChild(li);
+    });
+    var h=(mRole==='host');
+    $('#mstart').hidden=!h;
+    $('#optFill').checked=(o.fill!==false); $('#optFill').disabled=!h;
+    $('#optSync').checked=!!o.sync; $('#optSync').disabled=!h;
+    $('#lobNote').textContent=h?(o.fill===false?'친구가 들어오면 위에 나타나요. 모인 사람끼리 해요. (두 명 이상)':'친구가 들어오면 위에 나타나요. 빈 자리는 AI가 채워요.'):'방장이 시작하길 기다리는 중이에요.';
+  }
+  function mSeatOf(peer){
+    for(var i=0;i<mLB.length;i++) if(mLB[i].peer&&mLB[i].peer===peer) return i;
+    return -1;
+  }
+  function onHello(m){
+    if(m.sameTab||S) return;
+    var nick=cleanNick(m.data&&m.data.nick), s=mSeatOf(m.peer), changed=false;
+    if(s<0){
+      for(var i=1;i<4;i++) if(!mLB[i].human){ s=i; break; }
+      if(s<0){ mBcast(mLastSnap); return; }
+      mLB[s]={human:true,peer:m.peer,nick:nick}; changed=true;
+    }else if(mLB[s].nick!==nick){ mLB[s].nick=nick; changed=true; }
+    if(changed) mPublish(); else mBcast(mLastSnap);
+  }
+  function onPeersHost(ch){
+    ch.left.forEach(function(pe){
+      if(pe.sameTab) return;
+      var s=mSeatOf(pe.peer);
+      var nick=(s>=0&&mLB[s]&&mLB[s].nick)||'';
+      if(s>=0) mLB[s]={};
+      var gs=S?seatByPeer(pe.peer):-1;
+      if(gs>=0){
+        var p=S.players[gs], nm=p.name;
+        if(S.fillAI){
+          p.human=false; p.peer=null; p.name=p.name+'(AI)'; p.ear=true;   // 사람이 둘 이상 남으면 나간 자리는 AI가 이어받음
+        }else{
+          // AI 없이 하는 방: 나간 사람의 카드는 남은 사람들에게 나눠주고 자리를 비움
+          var cards=p.deck.concat(p.up); p.deck=[]; p.up=[]; p.human=false; p.active=false; p.peer=null; p.ear=true; p.name='';
+          var rest=S.players.filter(function(q){ return q.active&&total(q)>0; });
+          cards.forEach(function(c,k){ if(rest.length) rest[k%rest.length].deck.push(c); });
+        }
+        setEv({type:'left',seat:gs,name:nm,ai:!!S.fillAI});
+        var remain=S.players.filter(function(q){ return q.human; });
+        if(remain.length<2){ finish(remain.length?remain[0].i:0,'left'); return; }   // 혼자 남으면 승리
+        if(S.phase==='bell'){
+          if(calc().indexOf(5)<0){ clearTimeout(S.decT); S.phase='run'; beginTurn(); return; }
+          if(humansAllReported()) decide(); else scheduleDecide();
+        }else if(S.phase==='run'&&S.turn===gs){ clearTimeout(S.idleT); clearTimeout(S.flipT); beginTurn(); return; }
+        else if(S.phase==='ready') startGate();
+        var e=checkEnd(); if(e>=0){ finish(e); return; }
+        publish();
+      }else if(s>=0&&!S){
+        if(nick) toast(nick+josa(nick)+' 나갔어요');
+        mPublish();
+      }
+    });
+  }
+  async function createRoom(){
+    mErr('');
+    if(!RM){ mErr('방 기능을 쓸 수 없어요. 먼저 화면 위쪽 \u201c로그인\u201d으로 로그인해 주세요.'); return; }
+    if(mRole!=='none') leaveMulti('');       // 이전 방 상태가 남아 있으면 정리하고 새로 시작
+    var btn=$('#mkRoom'), label=btn.textContent;
+    btn.disabled=true; btn.textContent='만드는 중…'; $('#joinRoom').disabled=true;
+    var nick=cleanNick($('#nick').value); store('ddaeng5:nick',nick);
+    var code=genCode();
+    try{ NR=await joinNamed(code); }
+    catch(e){ btn.textContent=label; mPaintReady(); mErr('방을 만들지 못했어요. 잠시 후 다시 시도해 주세요. ('+((e&&e.code)||'알 수 없음')+')'); return; }
+    btn.textContent=label;
+    mNet='platform'; becomeHost(code,nick);
+  }
+  function becomeHost(code,nick){
+    mRole='host'; mCode=code; mSeat=0;
+    mLB=[{human:true,host:true,nick:nick},{},{},{}];
+    mUnsubs=[NR.on('hello',onHello),NR.on('pong',onPong),NR.on('bell',onNetBell),NR.on('flip',onNetFlip),NR.on('ready',onNetReady),NR.onPeers(onPeersHost)];
+    mHB=setInterval(function(){ if(mLastSnap) mBcast(mLastSnap); try{ NR.emit('ping',{t:performance.now()}).catch(function(){}); }catch(e){} },2000);
+    mPaintReady(); mPublish();
+  }
+  function onState(m){
+    if(m.sameTab) return;
+    var o=m.data;
+    if(!o||typeof o!=='object'||!Array.isArray(o.seats)||o.seats.length!==4||o.code!==mCode) return;
+    if(mHostPeer===null) mHostPeer=m.peer; else if(m.peer!==mHostPeer) return;
+    if(typeof o.id!=='number'||o.id<=mLastId) return;
+    mLastId=o.id;
+    var s=-1; o.seats.forEach(function(x,i){ if(s<0&&x.peer&&x.peer===mMyPeer) s=i; });
+    if(s<0){ mErr('방이 가득 찼거나 아직 연결 중이에요.'); return; }
+    clearInterval(mHelloT); mErr('');
+    mSeat=s;
+    if(o.g){ if(MODE!=='client'||gameEl.hidden) openGameClient(); view(o,s); }
+    else{
+      if(!gameEl.hidden){ var wasLive=!!(V&&!V.end); closeGameUI(); if(wasLive) toast('방장이 게임을 나갔어요'); }
+      mRender(o);
+    }
+  }
+  function onPeersClient(ch){
+    if(mHostPeer&&ch.left.some(function(x){ return x.peer===mHostPeer; })){
+      if(MODE==='client'&&!gameEl.hidden&&V&&!V.end){ hostLeftWin(); return; }
+      leaveMulti('방장이 나갔어요.');
+    }
+  }
+  function sendHello(){
+    if(NR){ try{ NR.emit('hello',{nick:cleanNick($('#nick').value)}).catch(mEmitErr); }catch(e){} }
+  }
+  async function joinRoomByCode(){
+    mErr('');
+    if(!RM){ mErr('방 기능을 쓸 수 없어요. 먼저 화면 위쪽 \u201c로그인\u201d으로 로그인해 주세요.'); return; }
+    if(mRole!=='none') leaveMulti('');
+    var code=$('#codeIn').value.trim().toLowerCase();
+    if(!/^[a-z0-9]{4}$/.test(code)){ mErr('코드는 4자리예요.'); return; }
+    var jb=$('#joinRoom'), jlabel=jb.textContent;
+    jb.disabled=true; jb.textContent='입장 중…'; $('#mkRoom').disabled=true;
+    store('ddaeng5:nick',cleanNick($('#nick').value));
+    var nr;
+    try{ nr=await joinNamed(code); }
+    catch(e){ jb.textContent=jlabel; mPaintReady(); mErr('방에 들어가지 못했어요. ('+((e&&e.code)||'알 수 없음')+')'); return; }
+    jb.textContent=jlabel;
+    mNet='platform'; NR=nr; becomeClient(code);
+  }
+  function becomeClient(code){
+    mRole='client'; mCode=code; mHostPeer=null; mMyPeer=null; mLastId=0;
+    mUnsubs=[
+      NR.on('hello',function(m){ if(m.isMe&&m.sameTab) mMyPeer=m.peer; }),
+      NR.on('state',onState),
+      NR.on('ping',function(m){ if(m.sameTab||m.peer!==mHostPeer) return; var d=m.data; if(d&&typeof d.t==='number') netEmit('pong',{t:d.t}); }),
+      NR.onPeers(onPeersClient)
+    ];
+    mPaintReady();
+    $('#mPick').hidden=true; $('#mRoom').hidden=false; $('#mstart').hidden=true;
+    $('#codeShow').textContent=(code==='P2P')?'직접 연결':code.toUpperCase(); $('#codeShow').classList.toggle('small',code==='P2P'); $('#seatList').innerHTML=''; $('#lobNote').textContent='방에 연결하는 중…';
+    var tries=0; sendHello();
+    mHelloT=setInterval(function(){
+      if(++tries>8){
+        clearInterval(mHelloT);
+        if(!mHostPeer) leaveMulti(mNet==='p2p'?'방장과 연결하지 못했어요. 다시 시도해 주세요.':'방을 찾지 못했어요. 코드를 확인해 주세요.');
+        return;
+      }
+      sendHello();
+    },1500);
+  }
+  function leaveMulti(note){
+    clearInterval(mHB); clearInterval(mHelloT);
+    mUnsubs.forEach(function(f){ try{ f(); }catch(e){} }); mUnsubs=[];
+    if(NR){ try{ NR.leave().catch(function(){}); }catch(e){} }
+    NR=null; mRole='none'; mNet='platform'; mCode=''; mHostPeer=null; mMyPeer=null; mLB=[]; mLastSnap=null; mLastId=0;
+    $('#p2pInvite').hidden=true; $('#p2pInvBox').hidden=true; $('#p2pAnsBox').hidden=true; $('#p2pJoinPanel').hidden=true; $('#p2pErr').textContent=''; $('#p2pInvErr').textContent='';
+    S=null; MODE='solo'; if(!gameEl.hidden) closeGameUI();
+    $('#mRoom').hidden=true; $('#mPick').hidden=false; $('#mstart').hidden=true;
+    mErr(note||''); mPaintReady();
+  }
+  function openMulti(){
+    var saved=store('ddaeng5:nick'); if(saved&&!$('#nick').value) $('#nick').value=saved;
+    $('#p2pErr').textContent=RTC?'':rtcMsg(); $('#p2pHost').disabled=!RTC; $('#p2pJoin').disabled=!RTC;
+    mPaintReady(); mDiagPaint(); multiEl.hidden=false; appEl.classList.add('multi-open'); $('#mback').focus();
+  }
+  function closeMulti(){
+    if(mRole!=='none') leaveMulti('');
+    multiEl.hidden=true; appEl.classList.remove('multi-open'); $('#help').focus();
+  }
+
+  // ===== 로그인 없이: 연결 코드를 주고받아 폰끼리 직접 연결 (WebRTC, 서버 없음) =====
+  // 방장이 만든 초대 코드를 친구가 붙여 넣어 응답 코드를 만들고, 방장이 그 응답 코드를 붙여 넣으면 연결됩니다.
+  // 연결된 뒤에는 위의 방과 같은 게임 로직을 그대로 씁니다.
+  var RTC=window.RTCPeerConnection||window.webkitRTCPeerConnection||null;
+  var IN_APP=/KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|DaumApps/i.test(navigator.userAgent);
+  function rtcMsg(){
+    return IN_APP?'카카오톡 같은 앱 안의 브라우저에서는 직접 연결이 안 돼요. 사파리나 크롬으로 이 주소를 열어 주세요.':'이 화면에서는 직접 연결 기능이 막혀 있어요. claude.ai 안에서 열리는 페이지는 폰에서 이 기능을 지원하지 않는 것 같아요. 이 게임 파일을 별도 사이트에 올려서 열면 쓸 수 있어요.';
+  }
+  var ICE={iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
+  function toB64u(u8){ var t=''; for(var i=0;i<u8.length;i++) t+=String.fromCharCode(u8[i]); return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  function fromB64u(t){ t=t.replace(/-/g,'+').replace(/_/g,'/'); while(t.length%4) t+='='; var r=atob(t), u=new Uint8Array(r.length); for(var i=0;i<r.length;i++) u[i]=r.charCodeAt(i); return u; }
+  async function packCode(obj){
+    var raw=new TextEncoder().encode(JSON.stringify(obj));
+    if(typeof CompressionStream==='function'){
+      try{
+        var cs=new CompressionStream('deflate'), w=cs.writable.getWriter(); w.write(raw); w.close();
+        return 'z'+toB64u(new Uint8Array(await new Response(cs.readable).arrayBuffer()));
+      }catch(e){}
+    }
+    return 'p'+toB64u(raw);
+  }
+  async function unpackCode(c){
+    c=String(c||'').replace(/\s+/g,''); if(c.length<20) throw new Error('short');
+    var mode=c.charAt(0), u8=fromB64u(c.slice(1));
+    if(mode==='z'){
+      if(typeof DecompressionStream!=='function') throw new Error('nodecomp');
+      var ds=new DecompressionStream('deflate'), w=ds.writable.getWriter(); w.write(u8); w.close();
+      u8=new Uint8Array(await new Response(ds.readable).arrayBuffer());
+    }
+    return JSON.parse(new TextDecoder().decode(u8));
+  }
+  function iceDone(pc,ms){
+    return new Promise(function(res){
+      if(pc.iceGatheringState==='complete'){ res(); return; }
+      var t=setTimeout(done,ms||4000);
+      function done(){ pc.removeEventListener('icegatheringstatechange',chk); clearTimeout(t); res(); }
+      function chk(){ if(pc.iceGatheringState==='complete') done(); }
+      pc.addEventListener('icegatheringstatechange',chk);
+    });
+  }
+  function mkMsg(t,d,peer,mine){ return {topic:t,data:d,peer:peer,isMe:!!mine,sameTab:!!mine,kind:'viewer',guest:false,by:null}; }
+  // 방장: 친구마다 연결 하나. 방(room)과 같은 emit/on/onPeers 모양으로 감싼다
+  function p2pHostRoom(){
+    var handlers={}, peerHs=[], conns={}, next=1;
+    var room={
+      emit:function(t,d){
+        var msg=JSON.stringify({t:t,d:d});
+        Object.keys(conns).forEach(function(id){ var c=conns[id]; if(c.dc&&c.dc.readyState==='open'){ try{ c.dc.send(msg); }catch(e){} } });
+        return Promise.resolve();
+      },
+      on:function(t,fn){ (handlers[t]=handlers[t]||[]).push(fn); return function(){ handlers[t]=(handlers[t]||[]).filter(function(f){ return f!==fn; }); }; },
+      onPeers:function(fn){ peerHs.push(fn); return function(){ peerHs=peerHs.filter(function(f){ return f!==fn; }); }; },
+      leave:function(){ Object.keys(conns).forEach(function(id){ try{ conns[id].pc.close(); }catch(e){} }); conns={}; return Promise.resolve(); },
+      count:function(){ return Object.keys(conns).length; },
+      onconn:null,
+      invite:async function(){
+        var id='p'+(next++), pc=new RTC(ICE), dc=pc.createDataChannel('g'), c={pc:pc,dc:dc,open:false};
+        conns[id]=c; wire(id,c);
+        await pc.setLocalDescription(await pc.createOffer()); await iceDone(pc);
+        return {id:id,code:await packCode({s:pc.localDescription.sdp})};
+      },
+      accept:async function(id,code){
+        var c=conns[id]; if(!c) throw new Error('noconn');
+        var o=await unpackCode(code); if(!o||!o.s) throw new Error('bad');
+        await c.pc.setRemoteDescription({type:'answer',sdp:o.s});
+      },
+      cancel:function(id){ var c=conns[id]; if(c&&!c.open){ try{ c.pc.close(); }catch(e){} delete conns[id]; } }
+    };
+    function wire(id,c){
+      c.dc.onopen=function(){
+        c.open=true; try{ c.dc.send(JSON.stringify({t:'__welcome',d:{peer:id}})); }catch(e){}
+        if(room.onconn) room.onconn(id);
+      };
+      c.dc.onmessage=function(ev){
+        var m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+        (handlers[m.t]||[]).slice().forEach(function(fn){ fn(mkMsg(m.t,m.d,id,false)); });
+      };
+      function gone(){
+        if(!conns[id]) return;
+        var was=c.open; delete conns[id]; try{ c.pc.close(); }catch(e){}
+        if(was) peerHs.slice().forEach(function(fn){ fn({peers:[],joined:[],left:[{peer:id,isMe:false,sameTab:false}],updated:[]}); });
+      }
+      c.dc.onclose=gone;
+      c.pc.onconnectionstatechange=function(){
+        var st=c.pc.connectionState;
+        if(st==='failed'||st==='closed') gone();
+        else if(st==='disconnected') setTimeout(function(){ if(c.pc.connectionState!=='connected') gone(); },5000);
+      };
+    }
+    return room;
+  }
+  // 친구: 방장 초대 코드를 받아 응답 코드를 만들고, 방장이 연결하면 ready가 풀린다
+  async function p2pJoin(offerCode){
+    var o=await unpackCode(offerCode); if(!o||!o.s) throw new Error('bad');
+    var pc=new RTC(ICE), handlers={}, peerHs=[], myPeer=null, dc=null, opened=false;
+    function fire(t,m){ (handlers[t]||[]).slice().forEach(function(fn){ fn(m); }); }
+    var room={
+      emit:function(t,d){
+        if(dc&&dc.readyState==='open'){ try{ dc.send(JSON.stringify({t:t,d:d})); }catch(e){} }
+        if(t==='hello'&&myPeer) fire('hello',mkMsg('hello',d,myPeer,true));    // 방과 같은 "내 메시지 되돌림"
+        return Promise.resolve();
+      },
+      on:function(t,fn){ (handlers[t]=handlers[t]||[]).push(fn); return function(){ handlers[t]=(handlers[t]||[]).filter(function(f){ return f!==fn; }); }; },
+      onPeers:function(fn){ peerHs.push(fn); return function(){ peerHs=peerHs.filter(function(f){ return f!==fn; }); }; },
+      leave:function(){ try{ pc.close(); }catch(e){} return Promise.resolve(); }
+    };
+    function hostGone(){
+      if(!opened) return; opened=false;
+      peerHs.slice().forEach(function(fn){ fn({peers:[],joined:[],left:[{peer:'host',isMe:false,sameTab:false}],updated:[]}); });
+    }
+    var ready=new Promise(function(res,rej){
+      var to=setTimeout(function(){ rej(new Error('timeout')); },120000);
+      pc.ondatachannel=function(ev){
+        dc=ev.channel;
+        dc.onmessage=function(e){
+          var m; try{ m=JSON.parse(e.data); }catch(x){ return; }
+          if(m.t==='__welcome'){ myPeer=m.d&&m.d.peer; opened=true; clearTimeout(to); res(); return; }
+          fire(m.t,mkMsg(m.t,m.d,'host',false));
+        };
+        dc.onclose=hostGone;
+      };
+      pc.onconnectionstatechange=function(){
+        var st=pc.connectionState;
+        if(st==='failed'||st==='closed'){ if(opened) hostGone(); else{ clearTimeout(to); rej(new Error('failed')); } }
+        else if(st==='disconnected') setTimeout(function(){ if(pc.connectionState!=='connected') hostGone(); },5000);
+      };
+    });
+    await pc.setRemoteDescription({type:'offer',sdp:o.s});
+    await pc.setLocalDescription(await pc.createAnswer()); await iceDone(pc);
+    return {code:await packCode({s:pc.localDescription.sdp}),room:room,ready:ready};
+  }
+  function copyField(el,btn){
+    var v=el.value, label=btn.textContent;
+    function ok(){ btn.textContent='복사했어요'; setTimeout(function(){ btn.textContent=label; },1500); }
+    el.focus(); el.select(); try{ el.setSelectionRange(0,v.length); }catch(e){}
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(v).then(ok,function(){ try{ if(document.execCommand('copy')) ok(); }catch(e){} }); return; } }catch(e){}
+    try{ if(document.execCommand('copy')) ok(); }catch(e){}
+  }
+  var p2pCur='';
+  function p2pErrMsg(e){
+    var m=(e&&e.message)||'';
+    if(m==='nodecomp') return '이 브라우저는 코드를 풀 수 없어요. 브라우저를 최신으로 업데이트해 주세요.';
+    return '코드가 올바르지 않아요. 전체를 빠짐없이 붙여 넣었는지 확인해 주세요.';
+  }
+  $('#p2pHost').addEventListener('click',function(){
+    $('#p2pErr').textContent='';
+    if(!RTC){ $('#p2pErr').textContent=rtcMsg(); return; }
+    if(mRole!=='none') leaveMulti('');
+    var nick=cleanNick($('#nick').value); store('ddaeng5:nick',nick);
+    mNet='p2p'; var room=p2pHostRoom(); NR=room;
+    room.onconn=function(id){
+      $('#p2pInvBox').hidden=true; $('#p2pAnsIn').value=''; p2pCur='';
+      $('#p2pNew').textContent='다른 친구도 초대하기'; $('#p2pInvErr').textContent='';
+    };
+    becomeHost('P2P',nick);
+  });
+  $('#p2pNew').addEventListener('click',async function(){
+    var b=this, label=b.textContent;
+    $('#p2pInvErr').textContent='';
+    if(!NR||mNet!=='p2p') return;
+    if(NR.count()>=3){ $('#p2pInvErr').textContent='친구는 최대 3명까지 초대할 수 있어요.'; return; }
+    if(p2pCur) NR.cancel(p2pCur);
+    b.disabled=true; b.textContent='코드 만드는 중…';
+    try{
+      var inv=await NR.invite(); p2pCur=inv.id;
+      $('#p2pOfferOut').value=inv.code; $('#p2pAnsIn').value=''; $('#p2pInvBox').hidden=false;
+    }catch(e){ $('#p2pInvErr').textContent='초대 코드를 만들지 못했어요. 잠시 후 다시 시도해 주세요.'; }
+    b.disabled=false; b.textContent=label;
+  });
+  $('#p2pOfferCopy').addEventListener('click',function(){ copyField($('#p2pOfferOut'),this); });
+  $('#p2pConnect').addEventListener('click',async function(){
+    $('#p2pInvErr').textContent='';
+    if(!NR||!p2pCur) return;
+    var b=this; b.disabled=true; b.textContent='연결 중…';
+    try{
+      await NR.accept(p2pCur,$('#p2pAnsIn').value);
+      $('#p2pInvErr').textContent='연결하는 중이에요. 몇 초 안에 친구가 자리에 나타나요.';
+      var id=p2pCur;
+      setTimeout(function(){ if(NR&&p2pCur===id&&!$('#p2pInvBox').hidden) $('#p2pInvErr').textContent='아직 연결되지 않았어요. 두 폰이 같은 와이파이인지, 코드를 처음부터 다시 만들어 보세요.'; },20000);
+    }catch(e){ $('#p2pInvErr').textContent=p2pErrMsg(e); }
+    b.disabled=false; b.textContent='연결';
+  });
+  $('#p2pJoin').addEventListener('click',function(){
+    $('#p2pErr').textContent=''; $('#p2pJoinPanel').hidden=!$('#p2pJoinPanel').hidden;
+  });
+  $('#p2pMakeAns').addEventListener('click',async function(){
+    var b=this, label=b.textContent;
+    $('#p2pErr').textContent='';
+    if(!RTC){ $('#p2pErr').textContent=rtcMsg(); return; }
+    if(mRole!=='none') leaveMulti('');
+    store('ddaeng5:nick',cleanNick($('#nick').value));
+    b.disabled=true; b.textContent='만드는 중…';
+    var r;
+    try{ r=await p2pJoin($('#p2pOfferIn').value); }
+    catch(e){ b.disabled=false; b.textContent=label; $('#p2pErr').textContent=p2pErrMsg(e); return; }
+    b.disabled=false; b.textContent=label;
+    $('#p2pAnsOut').value=r.code; $('#p2pAnsBox').hidden=false;
+    r.ready.then(function(){
+      mNet='p2p'; NR=r.room; becomeClient('P2P');
+    },function(){ $('#p2pErr').textContent='방장과 연결하지 못했어요. 처음부터 다시 시도해 주세요.'; });
+  });
+  $('#p2pAnsCopy').addEventListener('click',function(){ copyField($('#p2pAnsOut'),this); });
+  $('#mback').addEventListener('click',closeMulti);
+  $('#codeIn').addEventListener('input',function(e){
+    if(e.isComposing) return;
+    var v=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');    // 소문자로 쳐도 대문자로 바꾸고, 글자·숫자만 남김
+    if(v!==this.value) this.value=v;
+  });
+  $('#mkRoom').addEventListener('click',createRoom);
+  $('#joinRoom').addEventListener('click',joinRoomByCode);
+  $('#mstart').addEventListener('click',startOnline);
+  $('#optFill').addEventListener('change',function(e){ if(mRole!=='host') return; mFill=e.target.checked; mPublish(); });
+  $('#optSync').addEventListener('change',function(e){ if(mRole!=='host') return; mSync=e.target.checked; mPublish(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!multiEl.hidden) closeMulti(); });
+})();
+</script>
+</body>
+</html>
